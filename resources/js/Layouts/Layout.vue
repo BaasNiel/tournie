@@ -41,26 +41,10 @@
                         </div>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:items-center">
-                        <button
-                            type="button"
-                            class="
-                                bg-white
-                                p-1
-                                rounded-full
-                                text-gray-400
-                                hover:text-gray-500
-                                focus:outline-none
-                                focus:ring-2
-                                focus:ring-offset-2
-                                focus:ring-indigo-500
-                            "
-                        >
-                            <span class="sr-only">View notifications</span>
-                            <BellIcon class="h-6 w-6" aria-hidden="true" />
-                        </button>
-
                         <!-- Profile dropdown -->
-                        <Menu as="div" class="ml-3 relative">
+                        <Menu
+                            v-if="user"
+                            as="div" class="ml-3 relative">
                             <div>
                                 <MenuButton
                                     class="
@@ -77,7 +61,7 @@
                                     <span class="sr-only">Open user menu</span>
                                     <img
                                         class="h-8 w-8 rounded-full"
-                                        :src="user.imageUrl"
+                                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                         alt=""
                                     />
                                 </MenuButton>
@@ -105,23 +89,26 @@
                                         focus:outline-none
                                     "
                                 >
-                                    <MenuItem
-                                        v-for="item in userNavigation"
-                                        :key="item.name"
-                                        v-slot="{ active }"
-                                    >
-                                        <a
-                                            :href="item.href"
-                                            :class="[
-                                                active ? 'bg-gray-100' : '',
-                                                'block px-4 py-2 text-sm text-gray-700',
-                                            ]"
-                                            >{{ item.name }}</a
+                                    <MenuItem>
+                                        <Link
+                                            href="/logout"
+                                            method="post"
+                                            as="button"
+                                            class="
+                                                'block
+                                                px-4
+                                                py-2
+                                                text-sm text-gray-700'
+                                            "
+                                            >Log out</Link
                                         >
                                     </MenuItem>
                                 </MenuItems>
                             </transition>
                         </Menu>
+                        <Link v-else href="/login">
+                            Login
+                        </Link>
                     </div>
                     <div class="-mr-2 flex items-center sm:hidden">
                         <!-- Mobile menu button -->
@@ -178,7 +165,7 @@
                         <div class="flex-shrink-0">
                             <img
                                 class="h-10 w-10 rounded-full"
-                                :src="user.imageUrl"
+                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                 alt=""
                             />
                         </div>
@@ -206,15 +193,13 @@
                                 focus:ring-indigo-500
                             "
                         >
-                            <span class="sr-only">View notifications</span>
-                            <BellIcon class="h-6 w-6" aria-hidden="true" />
                         </button>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <a
-                            v-for="item in userNavigation"
-                            :key="item.name"
-                            :href="item.href"
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
                             class="
                                 block
                                 px-4
@@ -224,7 +209,7 @@
                                 text-gray-500
                                 hover:text-gray-800 hover:bg-gray-100
                             "
-                            >{{ item.name }}</a
+                            >Log out</Link
                         >
                     </div>
                 </div>
@@ -241,17 +226,7 @@
             </header>
             <main>
                 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <!-- Replace with your content -->
-                    <div class="px-4 py-8 sm:px-0">
-                        <div
-                            class="
-                                border-4 border-dashed border-gray-200
-                                rounded-lg
-                                h-96
-                            "
-                        />
-                    </div>
-                    <!-- /End replace -->
+                    <slot />
                 </div>
             </main>
         </div>
@@ -268,24 +243,22 @@ import {
     MenuItem,
     MenuItems,
 } from "@headlessui/vue";
-import { BellIcon, MenuIcon, XIcon } from "@heroicons/vue/outline";
 
-const user = {
-    name: "Tom Cook",
-    email: "tom@example.com",
-    imageUrl:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-};
+import { BellIcon, MenuIcon, XIcon } from "@heroicons/vue/outline";
+import { Link, usePage } from "@inertiajs/inertia-vue3";
+import { computed } from '@vue/reactivity';
+
+// const user = {
+//     name: "Tom Cook",
+//     email: "tom@example.com",
+//     imageUrl:
+//         "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+// };
+
 const navigation = [
-    { name: "Dashboard", href: "#", current: true },
-    { name: "Team", href: "#", current: false },
-    { name: "Projects", href: "#", current: false },
-    { name: "Calendar", href: "#", current: false },
-];
-const userNavigation = [
-    { name: "Your Profile", href: "#" },
-    { name: "Settings", href: "#" },
-    { name: "Sign out", href: "#" },
+    { name: "Log", href: route('log'), current: true },
+    { name: "Players", href: route('players'), current: false },
+    { name: "Matches", href: route('matches'), current: false },
 ];
 
 export default {
@@ -300,13 +273,16 @@ export default {
         BellIcon,
         MenuIcon,
         XIcon,
+        Link,
     },
+
     setup() {
+        const user = computed(() => usePage().props.value.auth.user)
+
         return {
             user,
             navigation,
-            userNavigation,
-        };
+        }
     },
 };
 </script>
