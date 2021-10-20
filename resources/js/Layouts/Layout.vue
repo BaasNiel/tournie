@@ -12,9 +12,9 @@
                                 alt="Workflow"
                             />
                             <img
-                                class="hidden lg:block h-8 w-auto"
-                                src="https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
-                                alt="Workflow"
+                                class="hidden lg:block h-12 w-auto"
+                                src="/images/logo.svg"
+                                alt="FT"
                             />
                         </div>
                         <div
@@ -107,7 +107,7 @@
                             </transition>
                         </Menu>
                         <Link v-else href="/login">
-                            Login
+                            Log in
                         </Link>
                     </div>
                     <div class="-mr-2 flex items-center sm:hidden">
@@ -217,13 +217,13 @@
         </Disclosure>
 
         <div class="py-10">
-            <header>
+            <!-- <header>
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h1 class="text-3xl font-bold leading-tight text-gray-900">
                         Dashboard
                     </h1>
                 </div>
-            </header>
+            </header> -->
             <main>
                 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <slot />
