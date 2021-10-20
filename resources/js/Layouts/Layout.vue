@@ -242,11 +242,11 @@ import {
     MenuButton,
     MenuItem,
     MenuItems,
-} from "@headlessui/vue";
+} from "@headlessui/vue"
 
-import { BellIcon, MenuIcon, XIcon } from "@heroicons/vue/outline";
-import { Link, usePage } from "@inertiajs/inertia-vue3";
-import { computed } from '@vue/reactivity';
+import { BellIcon, MenuIcon, XIcon } from "@heroicons/vue/outline"
+import { Link, usePage } from "@inertiajs/inertia-vue3"
+import { computed } from '@vue/reactivity'
 
 // const user = {
 //     name: "Tom Cook",
@@ -256,10 +256,10 @@ import { computed } from '@vue/reactivity';
 // };
 
 const navigation = [
-    { name: "Log", href: route('log'), current: true },
-    { name: "Players", href: route('players.index'), current: false },
+    { name: "Log", href: route('log'), current: route().current('log') },
+    { name: "Players", href: route('players.index'), current: route().current('players*') },
     { name: "Matches", href: route('matches'), current: false },
-];
+]
 
 export default {
     components: {
@@ -284,5 +284,5 @@ export default {
             navigation,
         }
     },
-};
+}
 </script>

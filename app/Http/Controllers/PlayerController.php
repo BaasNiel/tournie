@@ -35,7 +35,7 @@ class PlayerController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Player/Create');
     }
 
     /**
@@ -46,7 +46,14 @@ class PlayerController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Player::create($request->validate([
+            'first_name' => ['required', 'max:50'],
+            'last_name' => ['required', 'max:50'],
+            'handle' => ['required', 'max:50'],
+            'image_url' => ['required', 'url'],
+        ]));
+
+        return redirect(route('players.index'));
     }
 
     /**

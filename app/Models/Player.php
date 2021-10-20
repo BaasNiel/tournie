@@ -9,6 +9,8 @@ class Player extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function path()
     {
         return route('players.show', $this->id);
