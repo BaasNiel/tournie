@@ -22,10 +22,10 @@ class PlayerFactory extends Factory
     public function definition()
     {
         return [
-            'handle' => $this->faker->userName(),
+            'handle' => ucwords(implode(' ', $this->faker->words(rand(1, 3)))),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'image_url' => $this->faker->imageUrl(100, 100, 'gaming')
+            'image_url' => $this->faker->imageUrl(100, 100)
         ];
     }
 }
