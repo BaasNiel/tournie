@@ -62,3 +62,25 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Getting started (untested)
+1. Install composer dependencies 
+```
+composer install --ignore-platform-reqs 
+```
+2. Install NPM dependencies 
+```
+npm install
+```
+3. Build the containers
+```
+docker-compose build
+```
+4. Spin it up
+```
+docker-compose up -d
+```
+5. Generate the App key
+```
+./vendor/bin/sail artisan key:generate
+```
