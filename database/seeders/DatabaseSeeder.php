@@ -24,9 +24,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
 
-        /**
-         * Create a few players. Should probably move this to a DemoSeeder
-         */
-        Player::factory(15)->create();
+        $this->call(PlayerSeeder::class);
     }
 }
