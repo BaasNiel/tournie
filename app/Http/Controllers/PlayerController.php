@@ -64,7 +64,15 @@ class PlayerController extends Controller
      */
     public function show($id)
     {
-        //
+        $player = Player::find($id);
+
+        return Inertia::render('Player/Show', [ 'player' => [
+            'id' => $player->id,
+            'handle' => $player->handle,
+            'name' => $player->name(),
+            'image_url' => $player->image_url,
+            'path' => $player->path(),
+        ]]);
     }
 
     /**
