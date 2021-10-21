@@ -15,7 +15,7 @@ class PlayerController extends Controller
      */
     public function index()
     {
-        $players = Player::all()->map(function ($player) {
+        $players = Player::all()->sortByDesc('id')->map(function ($player) {
             return [
                 'id' => $player->id,
                 'handle' => $player->handle,
@@ -23,7 +23,7 @@ class PlayerController extends Controller
                 'image_url' => $player->image_url,
                 'path' => $player->path(),
             ];
-        });
+        })->values();
 
         return Inertia::render('Player/Index', [ 'players' => $players ]);
     }
