@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SnapshotController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,10 @@ Route::get('/players', function () {
 Route::get('/matches', function () {
     return Inertia::render('Matches');
 })->name('matches');
+
+
+Route::get('snapshots', [SnapshotController::class, 'index'])->name('index');
+Route::post('snapshot', [SnapshotController::class, 'submit'])->name('submit');
 
 
 require __DIR__.'/auth.php';
