@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\SnapshotController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\ScreenshotController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,9 +27,11 @@ Route::get('/matches', function () {
     return Inertia::render('Matches');
 })->name('matches');
 
+Route::get('/screenshots', function () {
+    return Inertia::render('Screenshots');
+})->name('screenshots');
 
-Route::get('snapshots', [SnapshotController::class, 'index'])->name('index');
-Route::post('snapshot', [SnapshotController::class, 'submit'])->name('submit');
+Route::post('/screenshot', [ScreenshotController::class, 'upload'])->name('upload');
 
 
 require __DIR__.'/auth.php';

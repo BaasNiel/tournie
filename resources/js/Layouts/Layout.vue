@@ -259,6 +259,7 @@ const navigation = [
     { name: "Log", href: route('log'), current: true },
     { name: "Players", href: route('players'), current: false },
     { name: "Matches", href: route('matches'), current: false },
+    { name: "Screenshots", href: route('screenshots'), current: false },
 ];
 
 export default {
