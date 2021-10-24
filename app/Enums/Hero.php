@@ -3,6 +3,7 @@
 namespace App\Enums;
 
 use BenSampo\Enum\Enum;
+use Illuminate\Support\Str;
 
 /**
  * @method static static Abaddon()
@@ -240,4 +241,40 @@ final class Hero extends Enum
     const WitchDoctor = 'Witch Doctor';
     const WraithKing = 'Wraith King';
     const Zeus = 'Zeus';
+
+    public static function startsWith($string): ?string {
+        if (Str::length($string) < 2) {
+            return null;
+        }
+
+        $names = self::getValues();
+        foreach ($names as $name) {
+            if (Str::startsWith(Str::lower($name), Str::lower($string))) {
+                return $name;
+            }
+        }
+
+        return null;
+    }
+
+    public static function findHeroName(array $strings): ?string {
+        $parts = [];
+        $name = null;
+
+        foreach ($strings as $string) {
+            $parts[] = $string;
+            $startsWith = implode(' ', $parts);
+
+            $nameCheck = self::startsWith($startsWith);
+            if (is_null($nameCheck)) {
+                break;
+            }
+
+            if (strtolower($nameCheck) == strtolower($startsWith)) {
+                $name = $nameCheck;
+            }
+        }
+
+        return $name;
+    }
 }

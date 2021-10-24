@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Google\Cloud\Vision\V1\Feature\Type;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Google\Cloud\Vision\V1\Likelihood;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -50,27 +51,43 @@ class SnapshotController extends Controller
 
                 $response = $client->textDetection($image);
                 $textAnnotations = $response->getTextAnnotations();
-                $lines = [];
-                foreach ($textAnnotations as $textAnnotation) {
-                    $description = $textAnnotation->getDescription();
 
-                    $separators = [
-                        "\n",
-                        '/',
-                        '[',
-                        ')',
-                        ':',
-                        '单',
-                        'numeric_3',
-                        'numeric_2',
-                    ];
-                    $lines = array_merge(
-                        $lines,
-                        $this->explodeArray($separators, $description)
-                    );
+                // Create filtered list of lines
+                $lines = collect();
+                foreach ($textAnnotations as $index => $textAnnotation) {
+
+                    // skip the first line
+                    if ($index === 0) {
+                        continue;
+                    }
+
+                    $lines->push($textAnnotation->getDescription());
                 }
 
-                $return['lines'] = $lines;
+                $exclude = [
+                    'backpack',
+                    'radiant',
+                    'buffs'
+                ];
+                $lines = $lines->filter(function ($line) use ($exclude) {
+                    return !in_array(strtolower($line), $exclude);
+                })->map(function ($line) {
+                    if (Str::startsWith($line, '[') && Str::endsWith($line, ']')) {
+                        return Str::substr($line, 1, -1);
+                    }
+
+                    if (Str::startsWith($line, '(') && Str::endsWith($line, ')')) {
+                        return Str::substr($line, 1, -1);
+                    }
+
+                    if (Str::endsWith($line, ')')) {
+                        return Str::substr($line, 0, -1);
+                    }
+
+                    return $line;
+                });
+
+                $return['lines'] = $this->mergeHeroNameLines($lines)->toArray();
 
                 $client->close();
                 Storage::disk('local')->put(
@@ -83,6 +100,32 @@ class SnapshotController extends Controller
 
             echo json_encode($stats);die();
         }
+    }
+
+    // Merge the hero name lines
+    private function mergeHeroNameLines(Collection $lines): Collection {
+        $lines = $lines->values()->toArray();
+        $joinedLines = collect();
+
+        $skipCount = 0;
+        foreach ($lines as $index => $line) {
+
+            $sliced = array_slice($lines, $index, 5);
+            $heroName = Hero::findHeroName($sliced);
+            if (!is_null($heroName)) {
+                $skipCount = Str::substrCount($heroName, ' ') + 1;
+                $joinedLines->push($heroName);
+            }
+
+            if ($skipCount > 0) {
+                $skipCount--;
+                continue;
+            }
+
+            $joinedLines->push($line);
+        }
+
+        return $joinedLines;
     }
 
     private function textToStats(array $lines): array
