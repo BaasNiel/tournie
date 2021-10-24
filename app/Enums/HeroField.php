@@ -16,6 +16,7 @@ use BenSampo\Enum\Enum;
  * @method static static denies()
  * @method static static level()
  * @method static static hero_level()
+ * @method static static gpm()
  */
 final class HeroField extends Enum
 {
@@ -30,4 +31,5 @@ final class HeroField extends Enum
     const denies = 'denies';
     const level = 'level';
     const hero_level = 'hero_level';
+    const gpm = 'gpm';
 }

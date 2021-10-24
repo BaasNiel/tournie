@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Hero;
+use App\Models\Player;
+use Exception;
 use Illuminate\Http\Request;
 use Google\Cloud\Vision\V1\Feature\Type;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
@@ -87,6 +89,13 @@ class SnapshotController extends Controller
                     return $line;
                 });
 
+                $exclude = [
+                    '/'
+                ];
+                $lines = $this->mergeHeroNameLines($lines)->filter(function ($line) use ($exclude) {
+                    return !in_array(strtolower($line), $exclude);
+                });
+
                 $return['lines'] = $this->mergeHeroNameLines($lines)->toArray();
 
                 $client->close();
@@ -97,7 +106,6 @@ class SnapshotController extends Controller
             }
 
             $stats = $this->textToStats($return['lines']);
-
             echo json_encode($stats);die();
         }
     }
@@ -111,9 +119,11 @@ class SnapshotController extends Controller
         foreach ($lines as $index => $line) {
 
             $sliced = array_slice($lines, $index, 5);
-            $heroName = Hero::findHeroName($sliced);
+            $heroName = $skipCount < 1
+                ? Hero::findHeroName($sliced)
+                : null;
             if (!is_null($heroName)) {
-                $skipCount = Str::substrCount($heroName, ' ') + 1;
+                $skipCount = 1 + Str::substrCount($heroName, ' ');
                 $joinedLines->push($heroName);
             }
 
@@ -153,16 +163,14 @@ class SnapshotController extends Controller
             $heroValues[] = $line;
         }
 
-        // $heroesOut = [];
         foreach ($heroes as &$hero) {
             $hero['keys'] = $this->arrayToHero($hero['values']);
         }
 
-        dd($heroes);
         return $heroes;
     }
 
-    private function getKeys(array $heroValues): ?array {
+    private function heroValuesToKeys(array $heroValues): ?array {
         $types = config('snapshot.types');
         $columns = collect(config('snapshot.columns'));
 
@@ -195,12 +203,14 @@ class SnapshotController extends Controller
                         $valid = $value > 5000;
                         break;
                     case 'rankCode':
-                        $valid = in_array($value, ['E']);
+                        // random string (might be the player's heroLevel actually)
+                        $valid = strlen($value) > 0;
                         break;
                     case 'level':
                     case 'heroLevel':
                         $valid = $value > 0 && $value <= 30;
                         break;
+                    case 'goldPerMinute':
                     case 'int':
                         $valid = $value > 0;
                         break;
@@ -224,12 +234,29 @@ class SnapshotController extends Controller
 
     private function arrayToHero(array $heroValues): array
     {
-        $keys = $this->getKeys($heroValues);
+        $fields = implode(', ', $heroValues);
 
+        $values = [];
+        $player = null;
+        while (count($heroValues)) {
+            $heroValue = array_shift($heroValues);
+
+            if (is_null($player)) {
+                $player = Player::where('slug', Str::slug($heroValue))->first();
+            }
+
+            if (!is_null($player)) {
+                $values[] = $heroValue;
+            }
+        }
+
+        if (empty($values)) {
+            throw new Exception("Could not find player in fields: ".$fields, 1);
+        }
+
+        $keys = $this->heroValuesToKeys($values);
         if (is_null($keys)) {
-            return [
-                'message' => 'No keys for '.count($heroValues)
-            ];
+            throw new Exception("No keys found in config (".json_encode($values).")", 1);
         }
 
         return $keys;

@@ -2,6 +2,7 @@
 version: '3'
 services:
     laravel.test:
+        container_name: tournie_app
         build:
             context: ./vendor/laravel/sail/runtimes/8.0
             dockerfile: Dockerfile
@@ -23,8 +24,14 @@ services:
             - sail
         depends_on:
             - mysql
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "http://localhost"]
+            retries: 3
+            timeout: 5s
     mysql:
-        image: 'mysql:8.0'
+        container_name: tournie_db
+        image: 'mysql/mysql-server:8.0'
         ports:
             - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
@@ -34,7 +41,7 @@ services:
             MYSQL_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
         volumes:
-            - 'sailmysql1:/var/lib/mysql'
+            - 'sailmysql:/var/lib/mysql'
         networks:
             - sail
         healthcheck:
@@ -45,5 +52,5 @@ networks:
     sail:
         driver: bridge
 volumes:
-    sailmysql1:
+    sailmysql:
         driver: local

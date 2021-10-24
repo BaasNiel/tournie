@@ -14,10 +14,22 @@ $types = [
     HeroField::denies => 'int',
     HeroField::level => 'level',
     HeroField::hero_level => 'heroLevel',
+    HeroField::gpm => 'goldPerMinute',
 ];
 
 $columns = [
-    // 10
+    [
+        HeroField::player,
+        HeroField::clan,
+        HeroField::kills,
+        HeroField::deaths,
+        HeroField::assists,
+        HeroField::net_worth,
+        HeroField::last_hits,
+        HeroField::denies,
+        HeroField::gpm,
+        HeroField::level,
+    ],
     [
         HeroField::player,
         HeroField::clan,
@@ -28,30 +40,7 @@ $columns = [
         HeroField::net_worth,
         HeroField::last_hits,
         HeroField::denies,
-        HeroField::level,
-    ],
-
-    // 10
-    // 0 => "Hugo"
-    // 1 => "FTza"
-    // 2 => "7"
-    // 3 => "9"
-    // 4 => "20"
-    // 5 => "25,692"
-    // 6 => "393"
-    // 7 => "20"
-    // 8 => "13"
-    // 9 => "29"
-    [
-        HeroField::player,
-        HeroField::clan,
-        HeroField::kills,
-        HeroField::deaths,
-        HeroField::assists,
-        HeroField::net_worth,
-        HeroField::last_hits,
-        HeroField::denies,
-        HeroField::hero_level,
+        HeroField::gpm,
         HeroField::level,
     ],
 ];
