@@ -68,22 +68,24 @@ class SnapshotController extends Controller
 
                 $exclude = [
                     'backpack',
-                    'radiant',
                     'buffs'
                 ];
                 $lines = $lines->filter(function ($line) use ($exclude) {
                     return !in_array(strtolower($line), $exclude);
                 })->map(function ($line) {
-                    if (Str::startsWith($line, '[') && Str::endsWith($line, ']')) {
-                        return Str::substr($line, 1, -1);
+                    if (
+                        Str::startsWith($line, ['[', '(']) &&
+                        Str::endsWith($line, [']', ')'])
+                    ) {
+                        $line = Str::substr($line, 1, -1);
                     }
 
-                    if (Str::startsWith($line, '(') && Str::endsWith($line, ')')) {
-                        return Str::substr($line, 1, -1);
+                    if (Str::startsWith($line, ['[', '('])) {
+                        $line = Str::substr($line, 0, -1);
                     }
 
-                    if (Str::endsWith($line, ')')) {
-                        return Str::substr($line, 0, -1);
+                    if (Str::endsWith($line, [']', ')'])) {
+                        $line = Str::substr($line, 0, -1);
                     }
 
                     return $line;
@@ -92,7 +94,7 @@ class SnapshotController extends Controller
                 $exclude = [
                     '/'
                 ];
-                $lines = $this->mergeHeroNameLines($lines)->filter(function ($line) use ($exclude) {
+                $lines = $lines->filter(function ($line) use ($exclude) {
                     return !in_array(strtolower($line), $exclude);
                 });
 
@@ -152,7 +154,6 @@ class SnapshotController extends Controller
             if (!is_null($heroKey)) {
                 $heroes[] = [
                     'name' => $heroName,
-                    'key' => $heroKey,
                     'values' => $heroValues
                 ];
                 $heroValues = [];
@@ -164,10 +165,45 @@ class SnapshotController extends Controller
         }
 
         foreach ($heroes as &$hero) {
-            $hero['keys'] = $this->arrayToHero($hero['values']);
+            $hero = $this->getHeroStats($hero['name'], $hero['values']);
         }
 
-        return $heroes;
+        $gameStats = $this->getGameStats($lines);
+
+        return [
+            'heroes' => $heroes,
+            'game' => $gameStats
+        ];
+    }
+
+    private function getGameStats(array $lines): array {
+        $stats = [];
+
+        // Find the winner
+        $side = null;
+        foreach ($lines as $index => $line) {
+            if (in_array(strtolower($line), ['radiant', 'dire'])) {
+                $side = strtolower($line);
+            }
+
+            if (is_null($side)) {
+                continue;
+            }
+
+            if ($line === 'WINNER') {
+                $stats['winner'] = $side;
+            }
+
+            if (
+                $line === 'SCORE:' &&
+                isset($lines[$index + 1]) &&
+                $lines[$index + 1] > 0
+            ) {
+                $stats[strtolower($side)] = intval($lines[$index + 1]);
+            }
+        }
+
+        return $stats;
     }
 
     private function heroValuesToKeys(array $heroValues): ?array {
@@ -232,7 +268,7 @@ class SnapshotController extends Controller
         return array_combine($columns, $heroValues);
     }
 
-    private function arrayToHero(array $heroValues): array
+    private function getHeroStats(string $heroName, array $heroValues): array
     {
         $fields = implode(', ', $heroValues);
 
@@ -251,13 +287,15 @@ class SnapshotController extends Controller
         }
 
         if (empty($values)) {
-            throw new Exception("Could not find player in fields: ".$fields, 1);
+            throw new Exception("Could not find player in fields: ".json_encode($fields), 1);
         }
 
         $keys = $this->heroValuesToKeys($values);
         if (is_null($keys)) {
-            throw new Exception("No keys found in config (".json_encode($values).")", 1);
+            throw new Exception("No keys found in config for: ".json_encode($values), 1);
         }
+
+        $keys['hero'] = $heroName;
 
         return $keys;
     }
