@@ -92,8 +92,8 @@ class ScreenshotController extends Controller
         $gameStats = $this->convertLinesToGameStats($lines);
 
         return [
+            'game' => $gameStats,
             'heroes' => $heroes,
-            'game' => $gameStats
         ];
     }
 

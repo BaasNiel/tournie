@@ -29,28 +29,9 @@
             </div>
         </div>
 
-        <!-- <div class="container">
-            <div class="row mt-3">
-                <form method="post" action="{{ route('submit') }}" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="image" class="form-label">Select image:</label>
-                        <input type="file" id="image" name="image" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn btn-primary">Submit</button>
-                </form>
-            </div>
-        </div> -->
-
-        <!-- <div class="container">
-            <file-drag-and-drop id="my-file" />
-        </div> -->
-
-        <!-- or with the option for a more robust message -->
-        <!-- <file-drag-and-drop id="my-file">
-            <img src="file-icon.svg">
-            <strong>Upload File</strong>
-        </file-drag-and-drop> -->
-
+        <div class="container">
+            <pre>{{ response }}</pre>
+        </div>
     </Layout>
 </template>
 
@@ -69,8 +50,15 @@ export default {
         return {
             name: '',
             file: '',
-            success: ''
+            success: '',
+            response: null
         };
+    },
+
+    computed: {
+        responsePretty() {
+            return JSON.stringify(JSON.parse(this.response), null, 2);
+        }
     },
 
     methods: {
@@ -79,6 +67,7 @@ export default {
         },
         formSubmit(e) {
             e.preventDefault();
+            let me = this;
             let existingObj = this;
 
             const config = {
@@ -93,6 +82,7 @@ export default {
             axios.post('/screenshot', data, config)
                 .then(function (res) {
                     existingObj.success = res.data.success;
+                    me.response = res.data;
                 })
                 .catch(function (err) {
                     existingObj.output = err;
