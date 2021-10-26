@@ -9,29 +9,27 @@
         </template>
 
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">Upload screenshot</div>
-
-                        <div class="card-body">
-                            <div v-if="success != ''" class="alert alert-success">
-                                {{success}}
-                            </div>
-
-                            <form @submit="formSubmit" enctype="multipart/form-data">
-                                <input type="file" class="form-control" v-on:change="onChange">
-                                <button class="btn btn-primary btn-block">Upload</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+            <form @submit="formSubmit" enctype="multipart/form-data">
+                <input type="file" v-on:change="onChange">
+                <button class="btn btn-primary btn-block">Upload</button>
+            </form>
+            <div v-if="success != ''">
+                {{ success }}
             </div>
         </div>
 
-        <div class="container">
-            <pre>{{ response }}</pre>
+        <div v-if="response">
+
+            <div v-if="response.success == true">
+                <h1>Response</h1>
+                <pre>{{ response }}</pre>
+            </div>
+
+            <div v-if="response.success == false">
+                <client-decision-exception :response="response" />
+            </div>
         </div>
+
     </Layout>
 </template>
 
@@ -39,11 +37,13 @@
 import Layout from '@/Layouts/Layout.vue'
 import { Head, usePage } from '@inertiajs/inertia-vue3';
 import { computed } from '@vue/reactivity';
+import ClientDecisionException from '@/Components/ClientDecisionException.vue';
 
 export default {
     components: {
         Layout,
         Head,
+        ClientDecisionException,
     },
 
     data() {
@@ -68,7 +68,6 @@ export default {
         formSubmit(e) {
             e.preventDefault();
             let me = this;
-            let existingObj = this;
 
             const config = {
                 headers: {
@@ -81,11 +80,15 @@ export default {
 
             axios.post('/screenshot', data, config)
                 .then(function (res) {
-                    existingObj.success = res.data.success;
                     me.response = res.data;
+
+                    console.log({
+                        fn: 'formSubmit',
+                        response: res.data
+                    });
                 })
                 .catch(function (err) {
-                    existingObj.output = err;
+                    me.output = err;
                 });
         }
     }

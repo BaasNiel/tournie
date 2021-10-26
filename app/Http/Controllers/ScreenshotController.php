@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Hero;
+use App\Exceptions\ClientDecisionException;
 use App\Models\FileUpload;
 use App\Models\PlayerAlias;
 use Exception;
@@ -116,7 +117,12 @@ class ScreenshotController extends Controller
         }
 
         if (empty($values)) {
-            throw new Exception("Could not find player alias in fields: ".implode(', ', $heroLinesOriginal), 1);
+            $message = "Could not find player alias in fields: ".implode(', ', $heroLinesOriginal);
+            throw new ClientDecisionException($message, [
+                'type' => 'dropdown',
+                'label' => 'Select the player alias',
+                'options' => $heroLinesOriginal,
+            ]);
         }
 
         $keys = $this->heroLinesToKeys($values);
