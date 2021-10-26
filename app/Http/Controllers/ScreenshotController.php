@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Hero;
 use App\Models\FileUpload;
-use App\Models\Player;
+use App\Models\PlayerAlias;
 use Exception;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
@@ -107,7 +107,7 @@ class ScreenshotController extends Controller
             $heroLine = array_shift($heroLines);
 
             if (is_null($player)) {
-                $player = Player::where('slug', Str::slug($heroLine))->first();
+                $player = PlayerAlias::where('slug', Str::slug($heroLine))->first();
             }
 
             if (!is_null($player)) {
@@ -116,7 +116,7 @@ class ScreenshotController extends Controller
         }
 
         if (empty($values)) {
-            throw new Exception("Could not find player name in fields: ".implode(', ', $heroLinesOriginal), 1);
+            throw new Exception("Could not find player alias in fields: ".implode(', ', $heroLinesOriginal), 1);
         }
 
         $keys = $this->heroLinesToKeys($values);

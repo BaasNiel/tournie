@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Player;
+use App\Models\PlayerAlias;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-class PlayerSeeder extends Seeder
+class PlayerAliasSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -31,10 +31,10 @@ class PlayerSeeder extends Seeder
             'RyOn',
         ];
         foreach ($playerNames as $playerName) {
-            Player::updateOrCreate([
+            PlayerAlias::updateOrCreate([
                 'slug' => Str::slug($playerName)
             ], [
-                'name' => $playerName
+                'alias' => $playerName
             ]);
         }
     }
