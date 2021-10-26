@@ -25,7 +25,10 @@ class PlayerSeeder extends Seeder
             'ХВОСТ',
             'Sue_Hack',
             'Hugo',
-            'Jazz'
+            'Jazz',
+            'Harker',
+            'XBOCT',
+            'RyOn',
         ];
         foreach ($playerNames as $playerName) {
             Player::updateOrCreate([

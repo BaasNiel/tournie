@@ -18,6 +18,47 @@ $types = [
 ];
 
 $columns = [
+    // 9
+    [
+        HeroField::player,
+        HeroField::clan,
+        HeroField::kills,
+        HeroField::deaths,
+        HeroField::assists,
+        HeroField::net_worth,
+        HeroField::last_hits,
+        HeroField::denies,
+        HeroField::hero_level,
+    ],
+
+    // 9
+    [
+        HeroField::player,
+        HeroField::clan,
+        HeroField::kills,
+        HeroField::deaths,
+        HeroField::assists,
+        HeroField::net_worth,
+        HeroField::last_hits,
+        HeroField::denies,
+        HeroField::level,
+    ],
+
+    // 10
+    [
+        HeroField::player,
+        HeroField::clan,
+        HeroField::rank,
+        HeroField::kills,
+        HeroField::deaths,
+        HeroField::assists,
+        HeroField::net_worth,
+        HeroField::last_hits,
+        HeroField::denies,
+        HeroField::level,
+    ],
+
+    // 10
     [
         HeroField::player,
         HeroField::clan,
@@ -30,6 +71,8 @@ $columns = [
         HeroField::gpm,
         HeroField::level,
     ],
+
+    // 11
     [
         HeroField::player,
         HeroField::clan,

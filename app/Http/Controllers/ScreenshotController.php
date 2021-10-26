@@ -99,7 +99,7 @@ class ScreenshotController extends Controller
 
     private function convertLinesToHeroStats(string $heroName, array $heroLines): array
     {
-        $fields = implode(', ', $heroLines);
+        $heroLinesOriginal = $heroLines;
 
         $values = [];
         $player = null;
@@ -116,13 +116,10 @@ class ScreenshotController extends Controller
         }
 
         if (empty($values)) {
-            throw new Exception("Could not find player in fields: ".json_encode($fields), 1);
+            throw new Exception("Could not find player name in fields: ".implode(', ', $heroLinesOriginal), 1);
         }
 
         $keys = $this->heroLinesToKeys($values);
-        if (is_null($keys)) {
-            throw new Exception("No keys found in config for: ".json_encode($values), 1);
-        }
 
         $keys['hero'] = $heroName;
 
@@ -179,11 +176,12 @@ class ScreenshotController extends Controller
                 }
             }
 
+
             return $valid;
         });
 
         if ($columns->isEmpty()) {
-            return null;
+            throw new Exception("No keys found in config for: ".implode(', ', $heroLines), 1);
         }
 
         $columns = $columns->shift();
@@ -232,7 +230,6 @@ class ScreenshotController extends Controller
             $lines = $this->getTextAnnotations($filepath);
             $lines = $this->filterLines($lines);
             $lines = $this->mergeHeroNameLines($lines);
-
             Storage::disk('local')->put($jsonFilepath, json_encode($lines->toArray()));
         }
 
@@ -265,7 +262,8 @@ class ScreenshotController extends Controller
             return $line;
         })->filter(function ($line) {
             return !in_array(strtolower($line), [
-                '/'
+                '/',
+                '单'
             ]);
         });
 
