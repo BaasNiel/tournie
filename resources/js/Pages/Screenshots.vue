@@ -11,7 +11,7 @@
         <div class="container">
             <form @submit="formSubmit" enctype="multipart/form-data">
                 <input type="file" v-on:change="onChange">
-                <button class="btn btn-primary btn-block">Upload</button>
+                <button class="btn btn-primary btn-block">Upload (updated G)</button>
             </form>
             <div v-if="success != ''">
                 {{ success }}
@@ -63,6 +63,9 @@ export default {
 
     methods: {
         onChange(e) {
+            console.log({
+                fn: 'onChange'
+            });
             this.file = e.target.files[0];
         },
         formSubmit(e) {
