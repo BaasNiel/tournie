@@ -45,12 +45,12 @@ composer install --ignore-platform-reqs
 ./vendor/bin/sail npm install
 ```
 
-6. Start the dev serve
+7. Start the dev serve
 ```shell
 ./vendor/bin/sail npm run watch
 ```
 
-7. Go to [http://localhost](http://localhost)
+8. Go to [http://localhost](http://localhost)
 
 ### Tips
 
