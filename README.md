@@ -72,15 +72,15 @@ composer install --ignore-platform-reqs
 ```
 npm install
 ```
-3. Build the containers
+3. Start the docker environment
 ```
-docker-compose build
+./vendor/bin/sail up -d
 ```
-4. Spin it up
+4. Migrations and seeders
 ```
-docker-compose up -d
+./vendor/bin/sail artisan migrate:refresh --seed
 ```
-5. Generate the App key
+5. Generate the application key
 ```
 ./vendor/bin/sail artisan key:generate
 ```
