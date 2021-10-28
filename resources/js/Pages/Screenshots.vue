@@ -11,7 +11,7 @@
         <div class="container">
             <form @submit="formSubmit" enctype="multipart/form-data">
                 <input type="file" v-on:change="onChange">
-                <button class="btn btn-primary btn-block">Upload (updated G)</button>
+                <button class="btn btn-primary btn-block">Upload</button>
             </form>
             <div v-if="success != ''">
                 {{ success }}

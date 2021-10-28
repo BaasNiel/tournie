@@ -57,6 +57,22 @@ class ScreenshotController extends Controller
     {
         $lines = $this->convertImageToTextLines($filepath);
 
+        // print_r($lines->toArray());
+
+        $ignore = config('snapshot.ignore');
+        $replace = config('snapshot.replace');
+        $lines = $lines->filter(function ($line) use ($ignore) {
+            return !in_array($line, $ignore);
+        })->map(function ($line) use ($replace) {
+            if (isset($replace[$line])) {
+                return $replace[$line];
+            }
+
+            return $line;
+        });
+
+        // print_r($lines->toArray());
+
         return $this->convertTextLinesToStats($lines);
     }
 
@@ -117,7 +133,6 @@ class ScreenshotController extends Controller
         }
 
         if (empty($values)) {
-            $message = "Could not find player alias in fields: ".implode(', ', $heroLinesOriginal);
 
             $options = collect($heroLinesOriginal)->filter(function ($value) {
                 $value = str_replace(',', '', $value);
@@ -133,6 +148,7 @@ class ScreenshotController extends Controller
                 return true;
             });
 
+            $message = "Could not find player alias in fields: ".implode(', ', $heroLinesOriginal);
             throw new ClientDecisionException($message, [
                 'action' => [
                     'method' => 'POST',
@@ -205,13 +221,111 @@ class ScreenshotController extends Controller
             return $valid;
         });
 
+
         if ($columns->isEmpty()) {
-            throw new Exception("No keys found in config for: ".implode(', ', $heroLines), 1);
+            $message = "No keys found in config for: ".implode(', ', $heroLines);
+
+            $types = config('snapshot.types');
+            $columns = config('snapshot.columns');
+
+            $mappings = collect($columns)->map(function ($mappingColumns) use ($heroLines) {
+                $validationData = $this->validateHeroLines($heroLines);
+                // foreach ($mappingColumns as $index => $mappingColumn) {
+                //     $validations[] = [
+                //         'index' => $index,
+                //         'field' => $mappingColumn,
+                //         'line' => $heroLines[$index] ?? null
+                //     ];
+                // }
+
+                return [
+                    'mapping' => array_combine($mappingColumns, array_splice($heroLines, 0, count($mappingColumns))),
+                    'validationData' => $validationData
+                ];
+            });
+
+            throw new ClientDecisionException($message, [
+                'action' => [
+                    'method' => 'POST',
+                    'endpoint' => '/client-exception/option'
+                ],
+                'type' => 'screenshot-key-mapping',
+                'label' => 'Select the player alias',
+                'options' => $heroLines,
+                'mappings' => $mappings->toArray(),
+                'columns' => config('snapshot.types'),
+            ]);
         }
 
         $columns = $columns->shift();
 
         return array_combine($columns, $heroLines);
+    }
+
+    private function validateHeroLines(array $heroLines): array {
+        $types = config('snapshot.types');
+        $columns = config('snapshot.columns');
+
+        $columns = collect($heroLines)->map(function ($heroLine, $index) use ($types, $columns) {
+            // $field = $columns[$index];
+            $field = $columns[0][$index] ?? null;
+            $type = $types[$field] ?? 'not-found';
+
+            return [
+                $field => $heroLine,
+                'index' => $index,
+                'type' => $type,
+                // 'heroLine' => $heroLine,
+                // 'field' => $field,
+                // 'type' => $type
+            ];
+        });
+
+        return $columns->toArray();
+
+
+        $valid = true;
+        foreach ($heroLines as $index => $heroLine) {
+            if (!$valid) {
+                break;
+            }
+
+            $field = $columns[$index];
+            $value = $heroLine;
+            $type = $types[$field];
+
+            switch ($type) {
+                case 'playerNames':
+                    $valid = strlen($value) > 0;
+                    break;
+                case 'clanNames':
+                    $valid = strlen($value) > 0;
+                    break;
+                case 'netWorth':
+                    $value = intval(str_replace(',', '', $value));
+                    $valid = $value > 5000;
+                    break;
+                case 'rankCode':
+                    // random string (might be the player's heroLevel actually)
+                    $valid = strlen($value) > 0;
+                    break;
+                case 'level':
+                case 'heroLevel':
+                    $valid = $value > 0 && $value <= 30;
+                    break;
+                case 'goldPerMinute':
+                case 'int':
+                    $valid = $value > 0;
+                    break;
+                default:
+                    $valid = gettype($value) === $type;
+                    break;
+            }
+        }
+
+        return [
+            'valid' => $valid
+        ];
     }
 
     private function convertLinesToGameStats(array $lines): array {

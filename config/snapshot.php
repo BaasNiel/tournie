@@ -2,6 +2,15 @@
 
 use App\Enums\HeroField;
 
+$ignore = [
+    "半",
+    "。"
+];
+
+$replace = [
+    "羊" => "6"
+];
+
 $types = [
     HeroField::player => 'playerNames',
     HeroField::clan => 'clanNames',
@@ -18,6 +27,19 @@ $types = [
 ];
 
 $columns = [
+    // 8
+    [
+        HeroField::player,
+        HeroField::kills,
+        HeroField::deaths,
+        HeroField::assists,
+        HeroField::net_worth,
+        HeroField::last_hits,
+        HeroField::denies,
+        HeroField::gpm,
+        HeroField::hero_level,
+    ],
+
     // 9
     [
         HeroField::player,
@@ -90,5 +112,7 @@ $columns = [
 
 return [
     'columns' => $columns,
-    'types' => $types
+    'types' => $types,
+    'ignore' => $ignore,
+    'replace' => $replace
 ];

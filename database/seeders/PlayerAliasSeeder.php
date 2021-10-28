@@ -29,6 +29,7 @@ class PlayerAliasSeeder extends Seeder
             'Harker',
             'XBOCT',
             'RyOn',
+            '0.0',
         ];
         foreach ($playerNames as $playerName) {
             PlayerAlias::updateOrCreate([

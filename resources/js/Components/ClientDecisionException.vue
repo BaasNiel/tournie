@@ -1,15 +1,21 @@
 <template>
     <h1>Exception</h1>
     <p>{{ response.message }}</p>
+    <p>{{ response.data.type }}</p>
     <div v-if="response.data.type === 'dropdown' && response.data.options">
         <select v-model="selected">
-            <!-- <option disabled value="">Options...</option> -->
             <option v-for="(option, key) in response.data.options" :key="key">
                 {{ option }}
             </option>
         </select>
 
         <button v-if="selected" @click="createAlias">Create alias '{{ selected }}'</button>
+    </div>
+
+    <div>
+        <div v-if="response.data.type === 'screenshot-key-mapping'">
+            {{ response.data.options }}
+        </div>
     </div>
 </template>
 
