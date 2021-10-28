@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClientExceptionController;
 use App\Http\Controllers\ScreenshotController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +33,9 @@ Route::get('/screenshots', function () {
 })->name('screenshots');
 
 Route::post('/screenshot', [ScreenshotController::class, 'upload'])->name('upload');
+
+Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
+    ->name('clientExceptionPost');
 
 
 require __DIR__.'/auth.php';

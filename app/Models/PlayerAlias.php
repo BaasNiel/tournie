@@ -11,6 +11,6 @@ class PlayerAlias extends Model
 
     protected $fillable = [
         'slug',
-        'name',
+        'alias',
     ];
 }

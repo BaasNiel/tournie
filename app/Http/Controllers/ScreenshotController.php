@@ -118,10 +118,29 @@ class ScreenshotController extends Controller
 
         if (empty($values)) {
             $message = "Could not find player alias in fields: ".implode(', ', $heroLinesOriginal);
+
+            $options = collect($heroLinesOriginal)->filter(function ($value) {
+                $value = str_replace(',', '', $value);
+
+                if (Str::length($value) < 3) {
+                    return false;
+                }
+
+                if (is_numeric($value)) {
+                    return false;
+                }
+
+                return true;
+            });
+
             throw new ClientDecisionException($message, [
+                'action' => [
+                    'method' => 'POST',
+                    'endpoint' => '/client-exception/option'
+                ],
                 'type' => 'dropdown',
                 'label' => 'Select the player alias',
-                'options' => $heroLinesOriginal,
+                'options' => $options,
             ]);
         }
 

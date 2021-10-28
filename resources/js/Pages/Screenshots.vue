@@ -81,11 +81,6 @@ export default {
             axios.post('/screenshot', data, config)
                 .then(function (res) {
                     me.response = res.data;
-
-                    console.log({
-                        fn: 'formSubmit',
-                        response: res.data
-                    });
                 })
                 .catch(function (err) {
                     me.output = err;
