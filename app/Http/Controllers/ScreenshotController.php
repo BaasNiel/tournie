@@ -443,7 +443,7 @@ class ScreenshotController extends Controller
         $image = Storage::disk('local')->get($filepath);
 
         $client = new ImageAnnotatorClient([
-            'credentials' => '/var/www/html/google-credentials.json'
+            'credentials' => base_path(env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION')),
         ]);
 
         $response = $client->textDetection($image);
