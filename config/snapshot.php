@@ -3,6 +3,25 @@
 use App\Enums\HeroField;
 
 $ignore = [
+    "OVERVIEW",
+    "SCOREBOARD",
+    "GRAPHS",
+    "PERFORMANCE",
+    "BREAKDOWNS",
+    "NET",
+    "ITEMS",
+    "ВАСКРАСК",
+    "RUN",
+    "LH",
+    "DN",
+    "GPM",
+    "BOUN",
+    "MVP",
+    "TT",
+    "K",
+    "D",
+    "A",
+    "|",
     "半",
     "。"
 ];

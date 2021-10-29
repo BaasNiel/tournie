@@ -122,9 +122,16 @@ class ScreenshotController extends Controller
         $player = null;
         while (count($heroLines)) {
             $heroLine = array_shift($heroLines);
+            $heroLinePlus = count($heroLines) ? $heroLine . ' ' . $heroLines[0] : null;
 
             if (is_null($player)) {
-                $player = PlayerAlias::where('slug', Str::slug($heroLine))->first();
+
+                $player = PlayerAlias::whereIn('slug', [
+                    Str::slug($heroLinePlus),
+                    Str::slug($heroLine)
+                ])->first();
+
+                // $player = PlayerAlias::where('slug', Str::slug($heroLine))->first();
             }
 
             if (!is_null($player)) {
@@ -264,68 +271,73 @@ class ScreenshotController extends Controller
 
     private function validateHeroLines(array $heroLines): array {
         $types = config('snapshot.types');
-        $columns = config('snapshot.columns');
+        $columnMappings = collect(config('snapshot.columns'));
 
-        $columns = collect($heroLines)->map(function ($heroLine, $index) use ($types, $columns) {
-            // $field = $columns[$index];
-            $field = $columns[0][$index] ?? null;
-            $type = $types[$field] ?? 'not-found';
+        $out = $columnMappings->map(function ($columnMapping, $columnMappingIndex) use ($heroLines, $types) {
+            $map = [];
+            foreach ($columnMapping as $columnMappingColumnIndex => $columnMappingColumn) {
+                $error = false;
+                $type = $types[$columnMappingColumn] ?? 'not-found';
+                $value = $heroLines[$columnMappingColumnIndex] ?? null;
+
+                switch ($type) {
+                    case 'playerNames':
+                        $error = strlen($value) > 0
+                            ? null
+                            : 'Expects length to be greater than zero';
+                        break;
+                    case 'clanNames':
+                        $error = strlen($value) > 0
+                            ? null
+                            : 'Expects length to be greater than zero';
+                        break;
+                    case 'netWorth':
+                        $value = intval(str_replace(',', '', $value));
+                        $error = $value > 5000
+                            ? null
+                            : 'Expected value to be greater than 5000';
+                        break;
+                    case 'rankCode':
+                        $error = strlen($value) > 0
+                            ? null
+                            : 'Expected length to be greater than zero';
+                        break;
+                    case 'level':
+                    case 'heroLevel':
+                        $error = $value > 0 && $value <= 30
+                            ? null
+                            : 'Expected value between 0 and 30';
+                        break;
+                    case 'goldPerMinute':
+                    case 'int':
+                        $error = $value > 0
+                            ? null
+                            : 'Expected value to be greater than zero';
+                        break;
+                    default:
+                        $error = gettype($value) === $type
+                            ? null
+                            : 'Expected type of "'.$type.'" but found "'.gettype($value).'"';
+                        break;
+                }
+
+                $map[] = [
+                    'index' => $columnMappingColumnIndex,
+                    'key' => $columnMappingColumn,
+                    'type' => $type,
+                    'value' => $value,
+                    'error' => $error
+                ];
+            }
 
             return [
-                $field => $heroLine,
-                'index' => $index,
-                'type' => $type,
-                // 'heroLine' => $heroLine,
-                // 'field' => $field,
-                // 'type' => $type
+                'columnMappingIndex' => $columnMappingIndex,
+                'columnMapping' => $columnMapping,
+                'map' => $map
             ];
         });
 
-        return $columns->toArray();
-
-
-        $valid = true;
-        foreach ($heroLines as $index => $heroLine) {
-            if (!$valid) {
-                break;
-            }
-
-            $field = $columns[$index];
-            $value = $heroLine;
-            $type = $types[$field];
-
-            switch ($type) {
-                case 'playerNames':
-                    $valid = strlen($value) > 0;
-                    break;
-                case 'clanNames':
-                    $valid = strlen($value) > 0;
-                    break;
-                case 'netWorth':
-                    $value = intval(str_replace(',', '', $value));
-                    $valid = $value > 5000;
-                    break;
-                case 'rankCode':
-                    // random string (might be the player's heroLevel actually)
-                    $valid = strlen($value) > 0;
-                    break;
-                case 'level':
-                case 'heroLevel':
-                    $valid = $value > 0 && $value <= 30;
-                    break;
-                case 'goldPerMinute':
-                case 'int':
-                    $valid = $value > 0;
-                    break;
-                default:
-                    $valid = gettype($value) === $type;
-                    break;
-            }
-        }
-
-        return [
-            'valid' => $valid
-        ];
+        return $out->toArray();
     }
 
     private function convertLinesToGameStats(array $lines): array {

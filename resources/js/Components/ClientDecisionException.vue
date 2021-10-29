@@ -1,43 +1,48 @@
 <template>
     <h1>Exception</h1>
     <p>{{ response.message }}</p>
-    <p>{{ response.data.type }}</p>
     <div v-if="response.data.type === 'dropdown' && response.data.options">
-        <select v-model="selected">
-            <option v-for="(option, key) in response.data.options" :key="key">
-                {{ option }}
-            </option>
-        </select>
+        <Multiselect
+            mode="tags"
+            v-model="selectedOptions"
+            :options="response.data.options"
+        />
 
-        <button v-if="selected" @click="createAlias">Create alias '{{ selected }}'</button>
+        <button v-if="selectedOptionsJoined" @click="createAlias">Create alias '{{ selectedOptionsJoined }}'</button>
     </div>
 
     <div>
         <div v-if="response.data.type === 'screenshot-key-mapping'">
-            {{ response.data.options }}
+            <code>
+                {{ response.data.mappings }}
+            </code>
         </div>
     </div>
 </template>
 
 <script>
+import Multiselect from '@vueform/multiselect'
+
 export default {
+    components: {
+        Multiselect,
+    },
     props: ['response'],
 
     data() {
         return {
             selected: null,
+            selectedOptions: null
         }
     },
-    // props: {
-    //     response: {
-    //         type: Object,
-    //         default: {}
-    //     }
-    // },
 
     computed: {
         responsePretty() {
             return JSON.stringify(this.response, null, 2);
+        },
+
+        selectedOptionsJoined() {
+            return this.selectedOptions?.join(' ');
         },
 
         type() {
@@ -47,10 +52,9 @@ export default {
 
     methods: {
         createAlias() {
-            console.log('createAlias: '+this.selected)
             const data = {
                 action: 'createAlias',
-                value: this.selected
+                value: this.selectedOptionsJoined
             }
 
             axios.post(this.response.data.action.endpoint, data)
@@ -67,3 +71,5 @@ export default {
     }
 }
 </script>
+
+<style src="@vueform/multiselect/themes/default.css"></style>
