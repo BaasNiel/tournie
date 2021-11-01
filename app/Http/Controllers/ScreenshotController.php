@@ -57,8 +57,6 @@ class ScreenshotController extends Controller
     {
         $lines = $this->convertImageToTextLines($filepath);
 
-        // print_r($lines->toArray());
-
         $ignore = config('snapshot.ignore');
         $replace = config('snapshot.replace');
         $lines = $lines->filter(function ($line) use ($ignore) {
@@ -70,8 +68,6 @@ class ScreenshotController extends Controller
 
             return $line;
         });
-
-        // print_r($lines->toArray());
 
         return $this->convertTextLinesToStats($lines);
     }
@@ -408,17 +404,18 @@ class ScreenshotController extends Controller
 
         // Create filtered list of lines
         $lines = collect();
-        foreach ($textAnnotations as $index => $textAnnotation) {
-
-            // The first line is bullshit
-            if ($index === 0) {
-                continue;
-            }
-
+        foreach ($textAnnotations as $textAnnotation) {
             $lines->push($textAnnotation->getDescription());
         }
 
+        Storage::disk('local')->put($filepath.'-raw.json', json_encode($lines->toArray()));
+
         $client->close();
+
+        // The first line is bullshit (usually?)
+        if ($lines->isNotEmpty()) {
+            $lines->shift();
+        }
 
         return $lines;
     }
