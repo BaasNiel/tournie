@@ -175,105 +175,42 @@ class ScreenshotController extends Controller
     }
 
     private function heroLinesToKeys(array $heroLines): ?array {
-        $types = config('snapshot.types');
-        $columns = collect(config('snapshot.columns'));
+        $heroLinesBefore = $heroLines;
+        // $types = config('snapshot.types');
+        // $columns = collect(config('snapshot.columns'));
 
-        // Get columns based on fields
-        $columns = $columns->filter(function ($columnNames) use ($heroLines) {
-            // has the same column count
-            return count($columnNames) === count($heroLines);
-        })->filter(function ($columnNames) use ($heroLines, $types) {
+        // Get column mappings
+        $validationData = $this->getColumnMappings($heroLines);
 
-            // satisfies the types
-            $valid = true;
-            foreach ($heroLines as $index => $heroLine) {
-                if (!$valid) {
-                    break;
-                }
-
-                $field = $columnNames[$index];
-                $value = $heroLine;
-                $type = $types[$field];
-
-                switch ($type) {
-                    case 'playerNames':
-                        $valid = strlen($value) > 0;
-                        break;
-                    case 'clanNames':
-                        $valid = strlen($value) > 0;
-                        break;
-                    case 'netWorth':
-                        $value = intval(str_replace(',', '', $value));
-                        $valid = $value > 5000;
-                        break;
-                    case 'rankCode':
-                        // random string (might be the player's heroLevel actually)
-                        $valid = strlen($value) > 0;
-                        break;
-                    case 'level':
-                    case 'heroLevel':
-                        $valid = $value > 0 && $value <= 30;
-                        break;
-                    case 'goldPerMinute':
-                    case 'int':
-                        $valid = $value > 0;
-                        break;
-                    default:
-                        $valid = gettype($value) === $type;
-                        break;
-                }
-            }
-
-
-            return $valid;
-        });
-
-
-        if ($columns->isEmpty()) {
-            $message = "No keys found in config for: ".implode(', ', $heroLines);
-
-            $types = config('snapshot.types');
-            $columns = config('snapshot.columns');
-
-            $mappings = collect($columns)->map(function ($mappingColumns) use ($heroLines) {
-                $validationData = $this->validateHeroLines($heroLines);
-                // foreach ($mappingColumns as $index => $mappingColumn) {
-                //     $validations[] = [
-                //         'index' => $index,
-                //         'field' => $mappingColumn,
-                //         'line' => $heroLines[$index] ?? null
-                //     ];
-                // }
-
-                return [
-                    'mapping' => array_combine($mappingColumns, array_splice($heroLines, 0, count($mappingColumns))),
-                    'validationData' => $validationData
-                ];
-            });
-
-            throw new ClientDecisionException($message, [
-                'action' => [
-                    'method' => 'POST',
-                    'endpoint' => '/client-exception/option'
-                ],
-                'type' => 'screenshot-key-mapping',
-                'label' => 'Select the player alias',
-                'options' => $heroLines,
-                'mappings' => $mappings->toArray(),
-                'columns' => config('snapshot.types'),
-            ]);
+        if (!empty($validationData['mapping'])) {
+            return $validationData['mapping'];
         }
 
-        $columns = $columns->shift();
-
-        return array_combine($columns, $heroLines);
+        $message = "No keys found in config for: ".implode(', ', $heroLines);
+        throw new ClientDecisionException($message, [
+            'action' => [
+                'method' => 'POST',
+                'endpoint' => '/client-exception/option'
+            ],
+            'type' => 'screenshot-key-mapping',
+            'label' => 'No mapping found',
+            'validationData' => $validationData,
+            'heroLinesBefore' => $heroLinesBefore
+        ]);
     }
 
-    private function validateHeroLines(array $heroLines): array {
+    private function getColumnMappings(array $heroLines): array {
+        $mapping = null;
         $types = config('snapshot.types');
         $columnMappings = collect(config('snapshot.columns'));
 
-        $out = $columnMappings->map(function ($columnMapping, $columnMappingIndex) use ($heroLines, $types) {
+        print_r([
+            'fn' => 'getColumnMappings',
+            'heroLines' => $heroLines,
+        ]);
+
+        $validations = $columnMappings->map(function ($columnMapping, $columnMappingIndex) use ($heroLines, $types, &$mapping) {
+            $hasErrors = false;
             $map = [];
             foreach ($columnMapping as $columnMappingColumnIndex => $columnMappingColumn) {
                 $error = false;
@@ -321,6 +258,10 @@ class ScreenshotController extends Controller
                         break;
                 }
 
+                if ($error !== null) {
+                    $hasErrors = true;
+                }
+
                 $map[] = [
                     'index' => $columnMappingColumnIndex,
                     'key' => $columnMappingColumn,
@@ -330,14 +271,18 @@ class ScreenshotController extends Controller
                 ];
             }
 
-            return [
-                'columnMappingIndex' => $columnMappingIndex,
-                'columnMapping' => $columnMapping,
-                'map' => $map
-            ];
+            if (!$hasErrors) {
+                $mapping = $map;
+                return false;
+            }
+
+            return $map;
         });
 
-        return $out->toArray();
+        return [
+            'mapping' => $mapping,
+            'validations' => $validations->toArray()
+        ];
     }
 
     private function convertLinesToGameStats(array $lines): array {
