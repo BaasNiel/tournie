@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\Hero;
 use App\Exceptions\ClientDecisionException;
-use App\Models\FileUpload;
 use App\Models\PlayerAlias;
-use Exception;
+use App\Services\ScreenshotGoogleService;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -15,6 +14,9 @@ use Illuminate\Support\Str;
 
 class ScreenshotController extends Controller
 {
+    public function __construct(
+        protected ScreenshotGoogleService $screenshotGoogleService
+    ) {}
 
     public function upload(Request $request)
     {
@@ -393,6 +395,10 @@ class ScreenshotController extends Controller
 
     protected function getImageAnnotatorClientText(string $filepath): Collection
     {
+        $return = $this->screenshotGoogleService->getData($filepath);
+
+        print_r($return);die();
+
         $image = Storage::disk('public')->get($filepath);
         $imageAnnotator = new ImageAnnotatorClient([
             'credentials' => base_path(env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION')),
