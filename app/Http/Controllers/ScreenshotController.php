@@ -34,13 +34,8 @@ class ScreenshotController extends Controller
         $filename = md5($content).'.'.$file->extension();
         $filepath = 'screenshots/'.$filename;
 
-        if (!Storage::disk('local')->exists($filepath)) {
-            Storage::disk('local')->put($filepath, $content);
-
-            $fileUpload = new FileUpload;
-            $fileUpload->name = $filename;
-            $fileUpload->path = '/storage/'.$filepath;
-            $fileUpload->save();
+        if (!Storage::disk('public')->exists($filepath)) {
+            Storage::disk('public')->put($filepath, $content);
         }
 
         $stats = $this->convertImageToStats($filepath);
@@ -48,7 +43,10 @@ class ScreenshotController extends Controller
         return response()->json([
             'success' => true,
             'filename' => $filename,
-            'stats' => $stats
+            'urls' => [
+                'image' => Storage::url($filepath),
+            ],
+            'stats' => $stats,
         ]);
     }
 
@@ -159,24 +157,18 @@ class ScreenshotController extends Controller
                 ],
                 'type' => 'dropdown',
                 'label' => 'Select the player alias',
-                'options' => $options,
+                'options' => array_values($options->toArray()),
             ]);
         }
 
-        $keys = $this->heroLinesToKeys($values);
-
-        $keys['hero'] = $heroName;
-
-        return $keys;
+        return [
+            'heroName' => $heroName,
+            'stats' => $this->mapHeroLineToStats($values)
+        ];
     }
 
-    private function heroLinesToKeys(array $heroLines): ?array {
-        $heroLinesBefore = $heroLines;
-        // $types = config('snapshot.types');
-        // $columns = collect(config('snapshot.columns'));
-
-        // Get column mappings
-        $validationData = $this->getColumnMappings($heroLines);
+    private function mapHeroLineToStats(array $heroLines): ?array {
+        $validationData = $this->validateHeroLines($heroLines);
 
         if (!empty($validationData['mapping'])) {
             return $validationData['mapping'];
@@ -190,24 +182,25 @@ class ScreenshotController extends Controller
             ],
             'type' => 'screenshot-key-mapping',
             'label' => 'No mapping found',
-            'validationData' => $validationData,
-            'heroLinesBefore' => $heroLinesBefore
+            'validationData' => $validationData
         ]);
     }
 
-    private function getColumnMappings(array $heroLines): array {
+    private function validateHeroLines(array $heroLines): array {
         $mapping = null;
         $types = config('snapshot.types');
         $columnMappings = collect(config('snapshot.columns'));
 
-        print_r([
-            'fn' => 'getColumnMappings',
-            'heroLines' => $heroLines,
-        ]);
+        // To-do: Implement playerNamesMerge fn
+        if (in_array($heroLines[0], ['Los', '|Dream'])) {
+            $heroLines[0] = implode(' ', [array_shift($heroLines), $heroLines[0]]);
+        }
 
         $validations = $columnMappings->map(function ($columnMapping, $columnMappingIndex) use ($heroLines, $types, &$mapping) {
             $hasErrors = false;
             $map = [];
+
+
             foreach ($columnMapping as $columnMappingColumnIndex => $columnMappingColumn) {
                 $error = false;
                 $type = $types[$columnMappingColumn] ?? 'not-found';
@@ -215,9 +208,10 @@ class ScreenshotController extends Controller
 
                 switch ($type) {
                     case 'playerNames':
-                        $error = strlen($value) > 0
+                        $player = PlayerAlias::where('alias', $value)->first();
+                        $error = $player
                             ? null
-                            : 'Expects length to be greater than zero';
+                            : 'Unable to find player name "'.$value.'"';
                         break;
                     case 'clanNames':
                         $error = strlen($value) > 0
@@ -242,8 +236,14 @@ class ScreenshotController extends Controller
                             : 'Expected value between 0 and 30';
                         break;
                     case 'goldPerMinute':
+                        $value = intval(str_replace(',', '', $value));
+                        $error = $value > 100
+                            ? null
+                            : 'Expected value to be greater than zero';
+                        break;
+                    case 'kills':
                     case 'int':
-                        $error = $value > 0
+                        $error = is_numeric($value) && $value > 0
                             ? null
                             : 'Expected value to be greater than zero';
                         break;
@@ -315,14 +315,14 @@ class ScreenshotController extends Controller
     {
         $jsonFilepath = $filepath.'.json';
 
-        if (Storage::disk('local')->exists($jsonFilepath)) {
-            $lines = json_decode(Storage::disk('local')->get($jsonFilepath), true);
+        if (Storage::disk('public')->exists($jsonFilepath)) {
+            $lines = json_decode(Storage::disk('public')->get($jsonFilepath), true);
             $lines = collect($lines);
         } else {
             $lines = $this->getTextAnnotations($filepath);
             $lines = $this->filterLines($lines);
             $lines = $this->mergeHeroNameLines($lines);
-            Storage::disk('local')->put($jsonFilepath, json_encode($lines->toArray()));
+            Storage::disk('public')->put($jsonFilepath, json_encode($lines->toArray()));
         }
 
         return $lines;
@@ -391,9 +391,59 @@ class ScreenshotController extends Controller
         return $joinedLines;
     }
 
+    protected function getImageAnnotatorClientText(string $filepath): Collection
+    {
+        $image = Storage::disk('public')->get($filepath);
+        $imageAnnotator = new ImageAnnotatorClient([
+            'credentials' => base_path(env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION')),
+        ]);
+
+        # annotate the image
+        $response = $imageAnnotator->textDetection($image);
+        $textAnnotations = $response->getTextAnnotations();
+
+        $lines = collect();
+        foreach ($textAnnotations as $index => $textAnnotation) {
+            $lines->push($textAnnotation->getDescription());
+        }
+
+        $imageAnnotator->close();
+
+        return $lines;
+
+        // printf('%d texts found:' . PHP_EOL, count($texts));
+        // foreach ($texts as $text) {
+        //     print($text->getDescription() . PHP_EOL);
+
+        //     # get bounds
+        //     $vertices = $text->getBoundingPoly()->getVertices();
+        //     $bounds = [];
+        //     foreach ($vertices as $vertex) {
+        //         $bounds[] = sprintf('(%d,%d)', $vertex->getX(), $vertex->getY());
+        //     }
+        //     print('Bounds: ' . join(', ', $bounds) . PHP_EOL);
+        // }
+
+        // $imageAnnotator->close();
+    }
+
     protected function getTextAnnotations(string $filepath): Collection
     {
-        $image = Storage::disk('local')->get($filepath);
+        $lines = $this->getImageAnnotatorClientText($filepath);
+
+        Storage::disk('public')->put($filepath.'-raw.json', json_encode($lines->toArray()));
+
+        // The first line is bullshit (usually?)
+        if ($lines->isNotEmpty()) {
+            $lines->shift();
+        }
+
+        return $lines;
+    }
+
+    protected function getTextAnnotationsOld(string $filepath): Collection
+    {
+        $image = Storage::disk('public')->get($filepath);
 
         $client = new ImageAnnotatorClient([
             'credentials' => base_path(env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION')),
@@ -408,7 +458,7 @@ class ScreenshotController extends Controller
             $lines->push($textAnnotation->getDescription());
         }
 
-        Storage::disk('local')->put($filepath.'-raw.json', json_encode($lines->toArray()));
+        Storage::disk('public')->put($filepath.'-raw.json', json_encode($lines->toArray()));
 
         $client->close();
 

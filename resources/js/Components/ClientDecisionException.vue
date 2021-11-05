@@ -13,9 +13,30 @@
 
     <div>
         <div v-if="response.data.type === 'screenshot-key-mapping'">
-            <code>
-                {{ response.data.mappings }}
-            </code>
+
+            <div v-for="(validation, validationIndex) in response.data.validationData.validations" :key="validationIndex">
+                <h1>Validation attempt #{{ validationIndex }}</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>index</th>
+                            <th>key</th>
+                            <th>value</th>
+                            <th>type</th>
+                            <th>error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(column, columnIndex) in validation" :key="columnIndex">
+                            <td>{{ column.index }}</td>
+                            <td>{{ column.key }}</td>
+                            <td>{{ column.value }}</td>
+                            <td>{{ column.type }}</td>
+                            <td>{{ column.error }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </template>

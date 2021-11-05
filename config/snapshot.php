@@ -34,7 +34,7 @@ $types = [
     HeroField::player => 'playerNames',
     HeroField::clan => 'clanNames',
     HeroField::rank => 'rankCode',
-    HeroField::kills => 'int',
+    HeroField::kills => 'kills',
     HeroField::deaths => 'int',
     HeroField::assists => 'int',
     HeroField::net_worth => 'netWorth',
@@ -46,6 +46,7 @@ $types = [
 ];
 
 $columns = [
+
     // 8
     [
         HeroField::player,
@@ -126,6 +127,21 @@ $columns = [
         HeroField::denies,
         HeroField::gpm,
         HeroField::level,
+    ],
+
+    // 11
+    [
+        HeroField::player, // Hugo
+        HeroField::clan, // FTza
+        HeroField::rank, // E
+        HeroField::level, // 29
+        HeroField::kills, // 6
+        HeroField::deaths, // 8
+        HeroField::assists, // 12
+        HeroField::net_worth, // 16,572
+        HeroField::last_hits, // 78
+        HeroField::denies, // 10
+        HeroField::gpm, // 712
     ],
 ];
 
