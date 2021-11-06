@@ -22,15 +22,15 @@
 
             <div v-if="response.success == true">
 
-                <img :src="response.urls.image" alt="Ag fok">
+                <img :src="response.urls.image" alt="Image not found">
 
                 <pre>{{response.stats.game}}</pre>
 
                 <div class="grid grid-cols-11">
+                    <div class="font-bold">clan</div>
                     <div class="font-bold">player</div>
                     <div class="font-bold">heroName</div>
                     <div class="font-bold">level</div>
-                    <div class="font-bold">clan</div>
                     <div class="font-bold">kills</div>
                     <div class="font-bold">deaths</div>
                     <div class="font-bold">assists</div>
@@ -42,27 +42,6 @@
                 <div v-for="(scoreboardLine, scoreboardLineIndex) in response.stats.heroes" :key="scoreboardLineIndex">
                     <scoreboard-line :data="scoreboardLine"/>
                 </div>
-
-                <!-- <table>
-                        <thead>
-                            <tr>
-                                <th>index</th>
-                                <th>key</th>
-                                <th>value</th>
-                                <th>type</th>
-                                <th>error</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(herofield, heroIndex) in response.stats.heroes" :key="columnIndex">
-                                <td>{{ column.index }}</td>
-                                <td>{{ column.key }}</td>
-                                <td>{{ column.value }}</td>
-                                <td>{{ column.type }}</td>
-                                <td>{{ column.error }}</td>
-                            </tr>
-                        </tbody>
-                    </table> -->
             </div>
 
             <div v-if="response.success == false">
@@ -76,7 +55,6 @@
 <script>
 import Layout from '@/Layouts/Layout.vue'
 import { Head, usePage } from '@inertiajs/inertia-vue3';
-import { computed } from '@vue/reactivity';
 import ClientDecisionException from '@/Components/ClientDecisionException.vue';
 import ScoreboardLine from '@/Components/ScoreboardLine.vue';
 
@@ -105,9 +83,6 @@ export default {
 
     methods: {
         onChange(e) {
-            console.log({
-                fn: 'onChange'
-            });
             this.file = e.target.files[0];
         },
         formSubmit(e) {

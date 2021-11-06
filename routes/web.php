@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientExceptionController;
 use App\Http\Controllers\ScreenshotController;
+use App\Http\Controllers\ScreenshotMappingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -36,6 +37,10 @@ Route::post('/screenshot', [ScreenshotController::class, 'upload'])->name('uploa
 
 Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
     ->name('clientExceptionPost');
+
+Route::get('/screenshot/mapping/text', [ScreenshotMappingController::class, 'findText'])->name('findText');
+Route::post('/screenshot/mapping/anchor', [ScreenshotMappingController::class, 'saveAnchor'])->name('saveAnchor');
+Route::post('/screenshot/mapping/field', [ScreenshotMappingController::class, 'saveField'])->name('saveField');
 
 
 require __DIR__.'/auth.php';

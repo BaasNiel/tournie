@@ -20,53 +20,59 @@ class ScreenshotGoogleService
 
     public function getData(string $screenshotPath): array
     {
-        $annotateImageResponse = $this->annotateImage($screenshotPath);
+        $jsonFilepath = dirname($screenshotPath).'/lines.json';
 
-        $annotations = $this->getScreenshotTextAnnotations($annotateImageResponse);
-        $document = $this->getScreenshotFullTextAnnotations($annotateImageResponse);
-
-        return [
-            'annotations' => $annotations->toArray(),
-            'document' => $document,
-        ];
-    }
-
-    private function getScreenshotFullTextAnnotations(AnnotateImageResponse $annotateImageResponse): array
-    {
-        $return = [];
-        $fullTextAnnotation = $annotateImageResponse->getFullTextAnnotation();
-
-        foreach ($fullTextAnnotation->getPages() as $page) {
-
-            foreach ($page->getBlocks() as $block) {
-                $block_text = '';
-                foreach ($block->getParagraphs() as $paragraph) {
-                    foreach ($paragraph->getWords() as $word) {
-                        foreach ($word->getSymbols() as $symbol) {
-                            $block_text .= $symbol->getText();
-                        }
-                        $block_text .= ' ';
-                    }
-                    $block_text .= "\n";
-                }
-                $return[] = $block_text;
-            }
-
+        // Caching load
+        if (Storage::disk('public')->exists($jsonFilepath)) {
+            $data = Storage::disk('public')->get($jsonFilepath);
+            return json_decode($data, true);
         }
 
-        return $return;
+        $annotateImageResponse = $this->annotateImage($screenshotPath);
+        $data = $this->getScreenshotTextAnnotations($annotateImageResponse);
+
+        // Caching save
+        Storage::disk('public')->put($jsonFilepath, json_encode($data));
+
+        return $data;
     }
 
-    private function getScreenshotTextAnnotations(AnnotateImageResponse $annotateImageResponse): Collection
+    private function getScreenshotTextAnnotations(AnnotateImageResponse $annotateImageResponse): array
     {
         $textAnnotations = $annotateImageResponse->getTextAnnotations();
 
+        $blocks = collect();
         $lines = collect();
         foreach ($textAnnotations as $textAnnotation) {
-            $lines->push($textAnnotation->getDescription());
+            $line = $textAnnotation->getDescription();
+            $lines->push($line);
+
+             # get bounds
+            $vertices = $textAnnotation->getBoundingPoly()->getVertices();
+            $sides = [
+                'tl',
+                'tr',
+                'bl',
+                'br'
+            ];
+            $dimensions = [];
+            foreach ($vertices as $index => $vertex) {
+                $side = $sides[$index] ?? 'no-side';
+                $dimensions[$side] = [
+                    'x' => $vertex->getX(),
+                    'y' => $vertex->getY()
+                ];
+            }
+            $blocks->push([
+                'text' => $line,
+                'dimensions' => $dimensions
+            ]);
         }
 
-        return $lines;
+        return [
+            'lines' => $lines->values()->toArray(),
+            'blocks' => $blocks->values()->toArray()
+        ];
     }
 
     private function annotateImage(string $screenshotPath): AnnotateImageResponse
