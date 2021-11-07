@@ -38,9 +38,10 @@ Route::post('/screenshot', [ScreenshotController::class, 'upload'])->name('uploa
 Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
     ->name('clientExceptionPost');
 
-Route::get('/screenshot/mapping/text', [ScreenshotMappingController::class, 'findText'])->name('findText');
+
+Route::get('/screenshot/mapping/text', [ScreenshotMappingController::class, 'findTextFromCoordinates'])->name('findTextFromCoordinates');
+Route::get('/screenshot/mapping/text/coordinates', [ScreenshotMappingController::class, 'findTextCoordinates'])->name('findTextCoordinates');
 Route::post('/screenshot/mapping/anchor', [ScreenshotMappingController::class, 'saveAnchor'])->name('saveAnchor');
 Route::post('/screenshot/mapping/field', [ScreenshotMappingController::class, 'saveField'])->name('saveField');
-
 
 require __DIR__.'/auth.php';

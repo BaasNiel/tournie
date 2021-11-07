@@ -1,6 +1,6 @@
 <template>
-    <h1>Exception</h1>
-    <p>{{ response.message }}</p>
+    <!-- <h1>Exception</h1>
+    <p>{{ response.message }}</p> -->
     <div v-if="response.data.type === 'dropdown' && response.data.options">
         <Multiselect
             mode="tags"

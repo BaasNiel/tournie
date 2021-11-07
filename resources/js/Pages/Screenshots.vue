@@ -107,13 +107,5 @@ export default {
                 });
         }
     }
-
-    // setup() {
-    //     const user = computed(() => usePage().props.value.auth.user);
-
-    //     return {
-    //         user,
-    //     }
-    // },
 }
 </script>

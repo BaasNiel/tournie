@@ -12,7 +12,7 @@ class ScreenshotMappingController extends Controller {
         private ScreenshotDimensionsService $screenshotDimensionsService
     ) { }
 
-    public function findText(Request $request)
+    public function findTextCoordinates(Request $request)
     {
         $screenshotPath = $request->get('screenshotPath');
         $text = $request->get('text');
@@ -31,6 +31,25 @@ class ScreenshotMappingController extends Controller {
             'text' => $text,
             'coordinates' => $coordinates,
             'fieldTypes' => $fieldTypes
+        ]);
+    }
+
+    public function findTextFromCoordinates(Request $request)
+    {
+        $screenshotPath = $request->get('screenshotPath');
+        $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
+        $textCoordinates = json_decode($request->get('textCoordinates', null), true);
+
+        $strings = $this->screenshotDimensionsService->findTextFromCoordinates(
+            $screenshotPath,
+            $anchorCoordinates,
+            $textCoordinates
+        );
+
+        return response()->json([
+            'success' => true,
+            'screenshotPath' => $screenshotPath,
+            'strings' => $strings
         ]);
     }
 

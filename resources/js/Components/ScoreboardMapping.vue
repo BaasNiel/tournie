@@ -1,90 +1,96 @@
 <template>
-    <BreezeButton @click="refreshScreenshot">
-        Refresh Screenshot
-    </BreezeButton>
 
-    <div>
-        <BreezeLabel for="text" value="Text" />
-        <BreezeInput
-            id="text"
-            type="text"
-            class="mt-1 block w-full"
-            v-model="form.text"
-            required
-            autofocus
+    <div class="container mx-auto w-full">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <BreezeLabel for="text" value="Text" />
+                <BreezeInput
+                    id="text"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.text"
+                    required
+                />
+                <BreezeButton @click="findTextCoordinates" class="mt-5">
+                    Find Text
+                </BreezeButton>
+            </div>
+            <div>
+                <div v-if="textCoordinates">
+                    <BreezeLabel for="x" value="x" />
+                    <BreezeInput
+                        id="x"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="textCoordinates.x"
+                    />
+
+                    <BreezeLabel for="y" value="y" />
+                    <BreezeInput
+                        id="y"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="textCoordinates.y"
+                    />
+
+                    <BreezeLabel for="width" value="Width" />
+                    <BreezeInput
+                        id="width"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="textCoordinates.width"
+                    />
+                    <BreezeLabel for="height" value="height" />
+                    <BreezeInput
+                        id="height"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="textCoordinates.height"
+                    />
+
+                    <div v-if="mapping.anchorCoordinates">
+                        <BreezeLabel for="fieldType" value="Field Type" />
+                        <Multiselect
+                            id="fieldType"
+                            v-model="mapping.fieldType"
+                            :options="mapping.fieldTypes"
+                        />
+
+                        <BreezeButton
+                            class="mt-5"
+                            @click="saveField(textCoordinates)"
+                        >
+                            Save as Field
+                        </BreezeButton>
+                    </div>
+
+                    <BreezeButton
+                        v-else
+                        class="mt-5"
+                        @click="saveAnchor(textCoordinates)"
+                    >
+                        Save as Anchor
+                    </BreezeButton>
+
+                    <BreezeButton
+                        class="mt-5"
+                        @click="findTextFromCoordinates()"
+                    >
+                        Find Text from Coordinates
+                    </BreezeButton>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mx-auto overflow-y-scroll">
+        <canvas
+            ref="screenshotCanvas"
+            :width="width"
+            :height="height"
+            @mousemove="showCoordinates"
         />
-        <BreezeButton @click="findText">
-            Find Text
-        </BreezeButton>
     </div>
-
-    <div v-if="textCoordinates">
-
-
-        <h1>Found coordinates for "{{ form.text }}"</h1>
-        x: {{ textCoordinates.x }} <br/>
-        y: {{ textCoordinates.y }} <br/>
-        width: {{ textCoordinates.width }} <br/>
-        height: {{ textCoordinates.height }} <br/>
-
-
-        <BreezeButton @click="undoImage()">
-            Undo Image
-        </BreezeButton>
-
-        <div v-if="!mapping.anchorCoordinates">
-            <BreezeButton @click="saveAnchor(textCoordinates)">
-                Save as Anchor
-            </BreezeButton>
-        </div>
-        <div v-else>
-
-            <BreezeLabel for="x" value="x" />
-            <BreezeInput
-                id="x"
-                type="text"
-                v-model="textCoordinates.x"
-            />
-
-            <BreezeLabel for="y" value="y" />
-            <BreezeInput
-                id="y"
-                type="text"
-                v-model="textCoordinates.y"
-            />
-
-            <BreezeLabel for="width" value="Width" />
-            <BreezeInput
-                id="width"
-                type="text"
-                v-model="textCoordinates.width"
-            />
-            <BreezeLabel for="height" value="height" />
-            <BreezeInput
-                id="height"
-                type="text"
-                v-model="textCoordinates.height"
-            />
-
-            <BreezeLabel for="fieldType" value="Field Type" />
-            <Multiselect
-                id="fieldType"
-                v-model="mapping.fieldType"
-                :options="mapping.fieldTypes"
-            />
-
-            <BreezeButton @click="saveField(textCoordinates)">
-                Save as Field
-            </BreezeButton>
-        </div>
-    </div>
-
-    <canvas
-        ref="screenshotCanvas"
-        :width="width"
-        :height="height"
-        @mousemove="showCoordinates"
-    />
 </template>
 
 <script>
@@ -123,6 +129,13 @@ export default {
         }
     },
 
+    mounted() {
+        this.refreshScreenshot();
+
+        // Not sure why? But it works...
+        this.refreshScreenshot();
+    },
+
     computed: {
         screenshotUrl() {
             return this.response?.data?.urls?.image;
@@ -154,16 +167,6 @@ export default {
     },
 
     methods: {
-        undoImage() {
-            let me = this;
-            let canvas = me.$refs.screenshotCanvas;
-            let context = canvas.getContext("2d");
-            if (me.canvasImages.length > 0) {
-                let image = me.canvasImages.shift();
-                context.putImageData(image, 0, 0);
-            }
-        },
-
         showCoordinates(e) {
             this.x = e.offsetX;
             this.y = e.offsetY;
@@ -253,7 +256,6 @@ export default {
             if (!me.screenshotUrl) { return; }
 
             let context = canvas.getContext("2d");
-
             let image = new Image();
             image.src = me.screenshotUrl;
             image.onload = function() {
@@ -268,14 +270,36 @@ export default {
             };
         },
 
-        findText() {
+        findTextFromCoordinates() {
+            let me = this;
+            const data = {
+                screenshotPath: me.response?.data?.data?.screenshotPath,
+                anchorCoordinates: me.mapping.anchorCoordinates ?? null,
+                textCoordinates: me.textCoordinates,
+            };
+
+            axios.get('/screenshot/mapping/text', {params: data})
+                .then(function (res) {
+                    console.log({
+                        res: res
+                    })
+                })
+                .catch(function (err) {
+                    me.output = err;
+                });
+        },
+
+        findTextCoordinates() {
             let me = this;
             const data = {
                 screenshotPath: me.response?.data?.data?.screenshotPath,
                 text: me.form.text,
             };
 
-            axios.get('/screenshot/mapping/text', {params: data})
+            me.mapping.fieldType = [];
+            me.mapping.fieldTypes = null;
+            me.textCoordinates = null;
+            axios.get('/screenshot/mapping/text/coordinates', {params: data})
                 .then(function (res) {
                     me.mapping.fieldTypes = res.data.fieldTypes;
                     me.textCoordinates = {
@@ -302,6 +326,7 @@ export default {
                 .then(function (response) {
                     me.mapping.anchorCoordinates = response.data.textCoordinates;
                     me.textCoordinates = null;
+                    me.form.text = null;
                 })
                 .catch(function (err) {
                     me.output = err;
