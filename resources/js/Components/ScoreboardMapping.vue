@@ -48,7 +48,21 @@
                         v-model="textCoordinates.height"
                     />
 
-                    <div v-if="mapping.anchorCoordinates">
+                    <BreezeLabel for="slotKey" value="Slot" />
+                    <Multiselect
+                        id="slotKey"
+                        v-model="mapping.slotKey"
+                        :options="mapping.slotKeys"
+                    />
+
+                    <BreezeButton
+                        class="mt-5"
+                        @click="saveSlot(textCoordinates)"
+                    >
+                        Save Slot
+                    </BreezeButton>
+
+                    <!-- <div v-if="mapping.anchorCoordinates">
                         <BreezeLabel for="fieldType" value="Field Type" />
                         <Multiselect
                             id="fieldType"
@@ -70,7 +84,7 @@
                         @click="saveAnchor(textCoordinates)"
                     >
                         Save as Anchor
-                    </BreezeButton>
+                    </BreezeButton> -->
 
                     <BreezeButton
                         class="mt-5"
@@ -123,6 +137,9 @@ export default {
                 fieldsCoordinates: [],
                 fieldType: null,
                 fieldTypes: [],
+
+                slotKey: null,
+                slotKeys: [],
             },
 
             canvasImages: []
@@ -196,30 +213,6 @@ export default {
             context.stroke();
         },
 
-        drawAnchorCoordinates(canvas) {
-            let me = this;
-            let context = canvas.getContext("2d");
-
-            if (!me.mapping.anchorCoordinates) { return; }
-
-            context.beginPath();
-            context.strokeStyle = "red";
-            context.rect(
-                me.mapping.anchorCoordinates.x,
-                me.mapping.anchorCoordinates.y,
-                me.mapping.anchorCoordinates.width,
-                me.mapping.anchorCoordinates.height,
-            );
-
-            context.fillStyle = "red"
-            context.fillText(
-                "Anchor: '"+me.mapping.anchorCoordinates.text+"'",
-                me.mapping.anchorCoordinates.x,
-                me.mapping.anchorCoordinates.y - 5
-            );
-            context.stroke();
-        },
-
         drawFieldsCoordinates(canvas) {
             let me = this;
             let context = canvas.getContext("2d");
@@ -228,20 +221,28 @@ export default {
             if (!me.mapping.fieldsCoordinates) { return; }
 
             me.mapping.fieldsCoordinates.forEach((fieldCoordinates) => {
+
+                let x = fieldCoordinates.x;
+                let y = fieldCoordinates.y;
+                if (fieldCoordinates.slotKey !== 'ANCHOR') {
+                    x += me.mapping.anchorCoordinates.x;
+                    y += me.mapping.anchorCoordinates.y;
+                }
+
                 context.beginPath();
                 context.strokeStyle = "red";
                 context.rect(
-                    me.mapping.anchorCoordinates.x + fieldCoordinates.x,
-                    me.mapping.anchorCoordinates.y + fieldCoordinates.y,
+                    x,
+                    y,
                     fieldCoordinates.width,
                     fieldCoordinates.height,
                 );
 
-                context.fillStyle = "red"
+                context.fillStyle = "red";
                 context.fillText(
-                    "Field Type: '"+fieldCoordinates.fieldType+"'",
-                    me.mapping.anchorCoordinates.x + fieldCoordinates.x,
-                    me.mapping.anchorCoordinates.y + fieldCoordinates.y - 5
+                    "Field Type: '"+fieldCoordinates.slotKey+"'",
+                    x,
+                    y - 5
                 );
                 context.stroke();
 
@@ -265,15 +266,42 @@ export default {
 
                 // Queue the drawings
                 me.drawTextCoordinates(canvas);
-                me.drawAnchorCoordinates(canvas);
                 me.drawFieldsCoordinates(canvas);
             };
+        },
+
+        findTextCoordinates() {
+            let me = this;
+            const data = {
+                screenshotPath: me.response?.data?.screenshotPath,
+                anchorCoordinates: me.mapping.anchorCoordinates ?? null,
+                text: me.form.text,
+            };
+
+            me.mapping.fieldType = [];
+            me.mapping.fieldTypes = null;
+            me.textCoordinates = null;
+            axios.get('/screenshot/mapping/text/coordinates', {params: data})
+                .then(function (res) {
+                    me.mapping.slotKeys = res.data.slotKeys;
+                    me.mapping.fieldTypes = res.data.fieldTypes;
+                    me.textCoordinates = {
+                        x: res.data.textCoordinates.tl.x,
+                        y: res.data.textCoordinates.tl.y,
+                        width: (res.data.textCoordinates.tr.x - res.data.textCoordinates.tl.x),
+                        height: (res.data.textCoordinates.bl.y - res.data.textCoordinates.tl.y),
+                        text: me.form.text,
+                    };
+                })
+                .catch(function (err) {
+                    me.output = err;
+                });
         },
 
         findTextFromCoordinates() {
             let me = this;
             const data = {
-                screenshotPath: me.response?.data?.data?.screenshotPath,
+                screenshotPath: me.response?.data?.screenshotPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 textCoordinates: me.textCoordinates,
             };
@@ -289,64 +317,24 @@ export default {
                 });
         },
 
-        findTextCoordinates() {
-            let me = this;
-            const data = {
-                screenshotPath: me.response?.data?.data?.screenshotPath,
-                text: me.form.text,
-            };
-
-            me.mapping.fieldType = [];
-            me.mapping.fieldTypes = null;
-            me.textCoordinates = null;
-            axios.get('/screenshot/mapping/text/coordinates', {params: data})
-                .then(function (res) {
-                    me.mapping.fieldTypes = res.data.fieldTypes;
-                    me.textCoordinates = {
-                        x: res.data.coordinates.tl.x,
-                        y: res.data.coordinates.tl.y,
-                        width: (res.data.coordinates.tr.x - res.data.coordinates.tl.x),
-                        height: (res.data.coordinates.bl.y - res.data.coordinates.tl.y),
-                        text: me.form.text,
-                    };
-                })
-                .catch(function (err) {
-                    me.output = err;
-                });
-        },
-
-        saveAnchor(textCoordinates) {
-            let me = this;
-            const data = {
-                screenshotPath: me.response?.data?.data?.screenshotPath,
-                textCoordinates: textCoordinates
-            };
-
-            axios.post('/screenshot/mapping/anchor', data)
-                .then(function (response) {
-                    me.mapping.anchorCoordinates = response.data.textCoordinates;
-                    me.textCoordinates = null;
-                    me.form.text = null;
-                })
-                .catch(function (err) {
-                    me.output = err;
-                });
-        },
-
-        saveField(textCoordinates) {
+        saveSlot(textCoordinates) {
             let me = this;
 
             const data = {
-                screenshotPath: me.response?.data?.data?.screenshotPath,
+                screenshotPath: me.response?.data?.screenshotPath,
                 anchorCoordinates: me.mapping.anchorCoordinates,
                 textCoordinates: textCoordinates,
-                fieldType: me.mapping.fieldType
+                slotKey: me.mapping.slotKey,
             };
 
-            axios.post('/screenshot/mapping/field', data)
+            axios.post('/screenshot/mapping/slot', data)
                 .then(function (response) {
                     me.mapping.fieldsCoordinates.push(response.data.textCoordinates);
                     me.textCoordinates = null;
+
+                    if (response.data.anchorCoordinates) {
+                        me.mapping.anchorCoordinates = response.data.anchorCoordinates;
+                    }
                 })
                 .catch(function (err) {
                     me.output = err;

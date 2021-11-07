@@ -43,9 +43,8 @@ class ScreenshotController extends Controller
             Storage::disk('public')->put($screenshotPath, $screenshotContent);
         }
 
-        // $stats = $this->screenshotImageService->convertToStats($screenshotPath);
 
-        $data = $this->screenshotDimensionsService->findShit($screenshotPath);
+        // $data = $this->screenshotDimensionsService->findShit($screenshotPath);
         $message = 'Do the mapping';
         throw new ClientDecisionException($message, [
             'action' => [
@@ -55,17 +54,17 @@ class ScreenshotController extends Controller
             'urls' => [
                 'image' => Storage::url($screenshotPath),
             ],
+            'screenshotPath' => $screenshotPath,
             'type' => 'mapping',
             'label' => 'Do the mapping!',
-            'data' => $data
         ]);
 
+        // $stats = $this->screenshotImageService->convertToStats($screenshotPath);
         return response()->json([
             'success' => true,
             'urls' => [
                 'image' => Storage::url($screenshotPath),
-            ],
-            // 'stats' => $stats,
+            ]
         ]);
     }
 }

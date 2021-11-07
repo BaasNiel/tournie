@@ -43,5 +43,6 @@ Route::get('/screenshot/mapping/text', [ScreenshotMappingController::class, 'fin
 Route::get('/screenshot/mapping/text/coordinates', [ScreenshotMappingController::class, 'findTextCoordinates'])->name('findTextCoordinates');
 Route::post('/screenshot/mapping/anchor', [ScreenshotMappingController::class, 'saveAnchor'])->name('saveAnchor');
 Route::post('/screenshot/mapping/field', [ScreenshotMappingController::class, 'saveField'])->name('saveField');
+Route::post('/screenshot/mapping/slot', [ScreenshotMappingController::class, 'saveSlot'])->name('saveSlot');
 
 require __DIR__.'/auth.php';
