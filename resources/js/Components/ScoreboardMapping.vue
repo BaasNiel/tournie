@@ -62,30 +62,6 @@
                         Save Slot
                     </BreezeButton>
 
-                    <!-- <div v-if="mapping.anchorCoordinates">
-                        <BreezeLabel for="fieldType" value="Field Type" />
-                        <Multiselect
-                            id="fieldType"
-                            v-model="mapping.fieldType"
-                            :options="mapping.fieldTypes"
-                        />
-
-                        <BreezeButton
-                            class="mt-5"
-                            @click="saveField(textCoordinates)"
-                        >
-                            Save as Field
-                        </BreezeButton>
-                    </div>
-
-                    <BreezeButton
-                        v-else
-                        class="mt-5"
-                        @click="saveAnchor(textCoordinates)"
-                    >
-                        Save as Anchor
-                    </BreezeButton> -->
-
                     <BreezeButton
                         class="mt-5"
                         @click="findTextFromCoordinates()"
@@ -159,6 +135,12 @@ export default {
         },
         responsePretty() {
             return JSON.stringify(this.response, null, 2)
+        },
+        canvas: function () {
+            return this.$refs.screenshotCanvas;
+        },
+        canvasContext: function () {
+            return this.canvas.getContext('2d');
         }
     },
 
@@ -189,38 +171,41 @@ export default {
             this.y = e.offsetY;
         },
 
-        drawTextCoordinates(canvas) {
+        drawTextCoordinates() {
             let me = this;
-            let context = canvas.getContext("2d");
+            if (!me.textCoordinates) { return; };
 
-            if (!me.textCoordinates) { return; }
-
-            context.beginPath();
-            context.strokeStyle = "green";
-            context.rect(
+            me.canvasContext.beginPath();
+            me.canvasContext.strokeStyle = "green";
+            me.canvasContext.rect(
                 me.textCoordinates.x,
                 me.textCoordinates.y,
                 me.textCoordinates.width,
                 me.textCoordinates.height,
             );
 
-            context.fillStyle = "green"
-            context.fillText(
+            me.canvasContext.fillStyle = "green";
+            me.canvasContext.setLineDash([6, 3]);
+            me.canvasContext.fillText(
                 "Text: '"+me.textCoordinates.text+"'",
                 me.textCoordinates.x,
                 me.textCoordinates.y - 5
             );
-            context.stroke();
+            me.canvasContext.stroke();
         },
 
-        drawFieldsCoordinates(canvas) {
+        drawFieldsCoordinates() {
             let me = this;
-            let context = canvas.getContext("2d");
 
             if (!me.mapping.anchorCoordinates) { return; }
             if (!me.mapping.fieldsCoordinates) { return; }
 
+            const colorMap = {
+                ANCHOR: "lightblue",
+                default: "white"
+            };
             me.mapping.fieldsCoordinates.forEach((fieldCoordinates) => {
+                let color = colorMap[fieldCoordinates.slotKey] ?? colorMap['default']
 
                 let x = fieldCoordinates.x;
                 let y = fieldCoordinates.y;
@@ -229,22 +214,23 @@ export default {
                     y += me.mapping.anchorCoordinates.y;
                 }
 
-                context.beginPath();
-                context.strokeStyle = "red";
-                context.rect(
+                me.canvasContext.beginPath();
+                me.canvasContext.setLineDash([2]);
+                me.canvasContext.strokeStyle = color;
+                me.canvasContext.rect(
                     x,
                     y,
                     fieldCoordinates.width,
                     fieldCoordinates.height,
                 );
 
-                context.fillStyle = "red";
-                context.fillText(
+                me.canvasContext.fillStyle = color;
+                me.canvasContext.fillText(
                     "Field Type: '"+fieldCoordinates.slotKey+"'",
                     x,
                     y - 5
                 );
-                context.stroke();
+                me.canvasContext.stroke();
 
             });
 
@@ -252,21 +238,19 @@ export default {
 
         refreshScreenshot() {
             let me = this;
-            let canvas = me.$refs.screenshotCanvas;
-            if (!canvas) { return; }
+            if (!me.canvasContext) { return; }
             if (!me.screenshotUrl) { return; }
 
-            let context = canvas.getContext("2d");
             let image = new Image();
             image.src = me.screenshotUrl;
             image.onload = function() {
                 me.height = image.height;
                 me.width = image.width;
-                context.drawImage(image, 0 ,0);
+                me.canvasContext.drawImage(image, 0 ,0);
 
                 // Queue the drawings
-                me.drawTextCoordinates(canvas);
-                me.drawFieldsCoordinates(canvas);
+                me.drawTextCoordinates();
+                me.drawFieldsCoordinates();
             };
         },
 
