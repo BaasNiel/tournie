@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PlayerController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,9 +20,7 @@ Route::get('/', function () {
     return Inertia::render('Log');
 })->name('log');
 
-Route::get('/players', function () {
-    return Inertia::render('Players');
-})->name('players');
+Route::resource('players', PlayerController::class);
 
 Route::get('/matches', function () {
     return Inertia::render('Matches');
