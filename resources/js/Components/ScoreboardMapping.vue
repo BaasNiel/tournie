@@ -16,13 +16,13 @@
                 </BreezeButton>
             </div>
             <div>
-                <div v-if="textCoordinates">
+                <div v-if="canvasBlock">
                     <BreezeLabel for="x" value="x" />
                     <BreezeInput
                         id="x"
                         type="text"
                         class="mt-1 block w-full"
-                        v-model="textCoordinates.x"
+                        v-model="canvasBlock.x"
                     />
 
                     <BreezeLabel for="y" value="y" />
@@ -30,7 +30,7 @@
                         id="y"
                         type="text"
                         class="mt-1 block w-full"
-                        v-model="textCoordinates.y"
+                        v-model="canvasBlock.y"
                     />
 
                     <BreezeLabel for="width" value="Width" />
@@ -38,14 +38,14 @@
                         id="width"
                         type="text"
                         class="mt-1 block w-full"
-                        v-model="textCoordinates.width"
+                        v-model="canvasBlock.width"
                     />
                     <BreezeLabel for="height" value="height" />
                     <BreezeInput
                         id="height"
                         type="text"
                         class="mt-1 block w-full"
-                        v-model="textCoordinates.height"
+                        v-model="canvasBlock.height"
                     />
 
                     <BreezeLabel for="slotKey" value="Slot" />
@@ -57,14 +57,14 @@
 
                     <BreezeButton
                         class="mt-5"
-                        @click="saveSlot(textCoordinates)"
+                        @click="saveSlot(canvasBlock)"
                     >
                         Save Slot
                     </BreezeButton>
 
                     <BreezeButton
                         class="mt-5"
-                        @click="findTextFromCoordinates()"
+                        @click="findTextFromCoordinates(canvasBlock)"
                     >
                         Find Text from Coordinates
                     </BreezeButton>
@@ -74,94 +74,6 @@
         </div>
     </div>
     <div class="container mx-auto overflow-y-scroll">
-        <div>
-            <BreezeLabel for="x" value="x" />
-            <BreezeInput
-                id="x"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.x"
-            />
-
-            <BreezeLabel for="y" value="y" />
-            <BreezeInput
-                id="y"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.y"
-            />
-
-            <BreezeLabel for="width" value="Width" />
-            <BreezeInput
-                id="width"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.width"
-            />
-
-            <BreezeLabel for="height" value="height" />
-            <BreezeInput
-                id="height"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.height"
-            />
-            <BreezeButton
-                class="mt-5"
-                @click="findTextFromCoordinates(canvasBlock)"
-            >
-                Find Text from Coordinates
-            </BreezeButton>
-        </div>
-        <div>
-            <BreezeLabel for="x" value="DEBUG: canvasBlock.drag.x" />
-            <BreezeInput
-                id="x"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.drag.x"
-            />
-
-            <BreezeLabel for="y" value="DEBUG: canvasBlock.drag.y" />
-            <BreezeInput
-                id="y"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.drag.y"
-            />
-
-            <BreezeLabel for="top" value="DEBUG: canvasBlock.top" />
-            <BreezeInput
-                id="top"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.top"
-            />
-
-            <BreezeLabel for="right" value="DEBUG: canvasBlock.right" />
-            <BreezeInput
-                id="right"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.right"
-            />
-
-            <BreezeLabel for="bottom" value="DEBUG: canvasBlock.bottom" />
-            <BreezeInput
-                id="bottom"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.bottom"
-            />
-
-            <BreezeLabel for="left" value="DEBUG: canvasBlock.left" />
-            <BreezeInput
-                id="left"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="canvasBlock.left"
-            />
-        </div>
         <canvas
             ref="screenshotCanvas"
             :style="canvasStyle"
@@ -198,7 +110,6 @@ export default {
             form: {
                 text: 'Radiant'
             },
-            textCoordinates: null,
 
             mapping: {
                 anchorCoordinates: null,
@@ -274,12 +185,6 @@ export default {
     },
 
     watch: {
-        textCoordinates: {
-            deep: true,
-            handler() {
-                this.refreshScreenshot();
-            }
-        },
         'mapping.anchorCoordinates': {
             deep: true,
             handler() {
@@ -333,7 +238,7 @@ export default {
         },
 
         canvasBlockChangeCursor() {
-            const margin = 20
+            const margin = 5
             let cursor = 'default';
 
             if (this.canvasBlock.drag.enabled) {
@@ -469,7 +374,7 @@ export default {
             if (!me.canvasBlock) { return; };
 
             me.canvasContext.beginPath();
-            me.canvasContext.strokeStyle = "pink";
+            me.canvasContext.strokeStyle = "white";
             me.canvasContext.rect(
                 me.canvasBlock.left + (margin / 2),
                 me.canvasBlock.top + (margin / 2),
@@ -477,37 +382,29 @@ export default {
                 me.canvasBlock.height - margin,
             );
 
-            me.canvasContext.fillStyle = "pink";
+            me.canvasContext.fillStyle = "white";
             me.canvasContext.setLineDash([6, 3]);
             me.canvasContext.fillText(
-                "Block: '"+me.canvasBlock.text+"'",
+                "Text: '"+me.canvasBlock.text+"'",
                 me.canvasBlock.left + (margin / 2),
                 me.canvasBlock.top + (margin / 2) - 5
             );
             me.canvasContext.stroke();
-        },
 
-        drawTextCoordinates() {
-            let me = this;
-            if (!me.textCoordinates) { return; };
+            this.findTextFromCoordinates(this.canvasBlock);
 
-            me.canvasContext.beginPath();
-            me.canvasContext.strokeStyle = "green";
-            me.canvasContext.rect(
-                me.textCoordinates.x,
-                me.textCoordinates.y,
-                me.textCoordinates.width,
-                me.textCoordinates.height,
+            if (!this.canvasBlock.foundText) {
+                return;
+            }
+
+            this.canvasContext.beginPath();
+            this.canvasContext.fillStyle = "white";
+            this.canvasContext.fillText(
+                "Found text: '"+this.canvasBlock.text+"'",
+                this.canvasBlock.left + (margin / 2),
+                this.canvasBlock.bottom + (margin / 2) + 5
             );
-
-            me.canvasContext.fillStyle = "green";
-            me.canvasContext.setLineDash([6, 3]);
-            me.canvasContext.fillText(
-                "Text: '"+me.textCoordinates.text+"'",
-                me.textCoordinates.x,
-                me.textCoordinates.y - 5
-            );
-            me.canvasContext.stroke();
+            this.canvasContext.stroke();
         },
 
         drawFieldsCoordinates() {
@@ -555,6 +452,8 @@ export default {
         refreshScreenshot() {
             let me = this;
 
+            me.canvasBlock.x = me.canvasBlock.left;
+            me.canvasBlock.y = me.canvasBlock.top;
             me.canvasBlock.right = me.canvasBlock.left + parseInt(me.canvasBlock.width);
             me.canvasBlock.bottom = me.canvasBlock.top + parseInt(me.canvasBlock.height);
 
@@ -569,7 +468,6 @@ export default {
                 me.canvasContext.drawImage(image, 0 ,0);
 
                 // Queue the drawings
-                me.drawTextCoordinates();
                 me.drawFieldsCoordinates();
                 me.drawCanvasBlock();
             };
@@ -585,25 +483,32 @@ export default {
 
             me.mapping.fieldType = [];
             me.mapping.fieldTypes = null;
-            me.textCoordinates = null;
             axios.get('/screenshot/mapping/text/coordinates', {params: data})
                 .then(function (res) {
                     me.mapping.slotKeys = res.data.slotKeys;
                     me.mapping.fieldTypes = res.data.fieldTypes;
-                    me.textCoordinates = {
+                    const coordinates = {
                         x: res.data.textCoordinates.tl.x,
                         y: res.data.textCoordinates.tl.y,
                         width: (res.data.textCoordinates.tr.x - res.data.textCoordinates.tl.x),
                         height: (res.data.textCoordinates.bl.y - res.data.textCoordinates.tl.y),
                         text: me.form.text,
                     };
+
+                    me.canvasBlock.x = coordinates.x;
+                    me.canvasBlock.y = coordinates.y;
+                    me.canvasBlock.left = me.canvasBlock.x;
+                    me.canvasBlock.top = me.canvasBlock.y;
+                    me.canvasBlock.width = coordinates.width;
+                    me.canvasBlock.height = coordinates.height;
+                    me.canvasBlock.text = coordinates.text;
                 })
                 .catch(function (err) {
                     me.output = err;
                 });
         },
 
-        findTextFromCoordinates(coordinates) {
+        findTextFromCoordinates: function(coordinates) {
             let me = this;
             const data = {
                 screenshotPath: me.response?.data?.screenshotPath,
@@ -611,15 +516,20 @@ export default {
                 textCoordinates: coordinates ?? me.textCoordinates,
             };
 
-            axios.get('/screenshot/mapping/text', {params: data})
-                .then(function (res) {
-                    console.log({
-                        res: res
-                    })
-                })
-                .catch(function (err) {
-                    me.output = err;
-                });
+            const CancelToken = axios.CancelToken;
+            const source = CancelToken.source();
+            axios.get('/screenshot/mapping/text', {
+                cancelToken: source.token,
+                params: data
+            }).then(function (res) {
+                me.canvasBlock.foundText = null
+                if (res.data?.strings?.strings && res.data.strings.strings.length) {
+                    me.canvasBlock.foundText = res.data.strings.strings.join(", ")
+                }
+            })
+            .catch(function (err) {
+                me.output = err;
+            });
         },
 
         saveSlot(textCoordinates) {
