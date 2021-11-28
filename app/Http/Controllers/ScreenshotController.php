@@ -45,6 +45,7 @@ class ScreenshotController extends Controller
 
         // $stats = $this->screenshotImageService->convertToStats($screenshotPath);
         // $data = $this->screenshotDimensionsService->findShit($screenshotPath);
+
         $message = 'Do the mapping';
         throw new ClientDecisionException($message, [
             'action' => [

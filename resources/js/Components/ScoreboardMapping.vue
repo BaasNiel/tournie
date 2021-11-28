@@ -144,7 +144,9 @@ export default {
                 dragY: 0,
                 drag: {
                     x: null,
-                    y: null
+                    y: null,
+                    enabled: false,
+                    lastEnabledAt: null
                 }
             },
         }
@@ -181,7 +183,7 @@ export default {
             return {
                 cursor: cursorMap[this.canvasBlock.cursor] ?? this.canvasBlock.cursor
             }
-        }
+        },
     },
 
     watch: {
@@ -202,10 +204,64 @@ export default {
             handler() {
                 this.refreshScreenshot();
             }
-        }
+        },
+        'canvasBlock.x': function (newValue, oldValue) {
+            this.canvasBlockChanged('x', newValue, oldValue)
+        },
+        'canvasBlock.y': function (newValue, oldValue) {
+            this.canvasBlockChanged('y', newValue, oldValue)
+        },
+        'canvasBlock.width': function (newValue, oldValue) {
+            this.canvasBlockChanged('width', newValue, oldValue)
+        },
+        'canvasBlock.height': function (newValue, oldValue) {
+            this.canvasBlockChanged('height', newValue, oldValue)
+        },
     },
 
     methods: {
+        canvasBlockChangedDraw(field, newValue, oldValue) {
+            console.log('Console Block Diamaters changed')
+            console.log(field)
+            console.log(newValue)
+
+            const me = this
+            const top = me.canvasBlock.top
+            const right = me.canvasBlock.right
+            const bottom = me.canvasBlock.bottom
+            const left = me.canvasBlock.left
+            let lines = [
+                'top: ' + top,
+                'right: ' + right,
+                'bottom: ' + bottom,
+                'left: ' + left,
+            ];
+
+            me.canvasContext.beginPath();
+            me.canvasContext.fillStyle = "white";
+            lines.forEach((line, index) => {
+                me.canvasContext.fillText(
+                    line,
+                    me.canvasBlock.right + 20,
+                    me.canvasBlock.top + (index * 10)
+                );
+            })
+            me.canvasContext.stroke();
+
+        },
+
+        canvasBlockChanged(field, newValue, oldValue) {
+            if (typeof this.canvasBlockChangedDrawTimeout === 'number') {
+                clearTimeout(this.canvasBlockChangedDrawTimeout);
+                this.canvasBlockChangedDrawTimeout = undefined;
+            }
+
+            this.canvasBlockChangedDrawTimeout = setTimeout(() => {
+                this.canvasBlockChangedDraw(field, newValue, oldValue)
+                this.findTextFromCoordinates(this.canvasBlock);
+            }, 1000)
+        },
+
         screenshotCanvasMouseDown(e) {
             if (
                 (this.mouse.x > this.canvasBlock.left) &&
@@ -221,32 +277,19 @@ export default {
 
         screenshotCanvasMouseUp(e) {
             this.canvasBlock.drag.enabled = false;
+            this.canvasBlock.drag.lastEnabledAt = Date.now();
         },
 
         canvasBlockMove() {
-            if (!this.canvasBlock.drag.enabled) {
-                return;
-            }
-
-            if (this.canvasBlock.cursor !== 'move') {
-                return;
-            }
-
-            // Move the fucking box!
             this.canvasBlock.top = parseInt(this.mouse.y) - parseInt(this.canvasBlock.drag.y);
             this.canvasBlock.left = parseInt(this.mouse.x) - parseInt(this.canvasBlock.drag.x);
         },
 
         canvasBlockChangeCursor() {
             const margin = 5
-            let cursor = 'default';
-
-            if (this.canvasBlock.drag.enabled) {
-                return;
-            }
-
             const x = this.mouse.x
             const y = this.mouse.y
+            let cursor = 'default';
 
             if (
                 (x > this.canvasBlock.left) &&
@@ -287,10 +330,6 @@ export default {
 
         canvasBlockResize() {
             let directions = [];
-
-            if (!this.canvasBlock.drag.enabled) {
-                return;
-            }
 
             if (this.canvasBlock.cursor === "s-resize") {
                 directions.push("down");
@@ -363,9 +402,15 @@ export default {
             this.mouse.x = e.offsetX;
             this.mouse.y = e.offsetY;
 
-            this.canvasBlockMove();
-            this.canvasBlockChangeCursor();
-            this.canvasBlockResize();
+            if (this.canvasBlock.drag.enabled) {
+                if (this.canvasBlock.cursor === 'move') {
+                    this.canvasBlockMove();
+                } else {
+                    this.canvasBlockResize();
+                }
+            } else {
+                this.canvasBlockChangeCursor();
+            }
         },
 
         drawCanvasBlock() {
@@ -390,21 +435,6 @@ export default {
                 me.canvasBlock.top + (margin / 2) - 5
             );
             me.canvasContext.stroke();
-
-            this.findTextFromCoordinates(this.canvasBlock);
-
-            if (!this.canvasBlock.foundText) {
-                return;
-            }
-
-            this.canvasContext.beginPath();
-            this.canvasContext.fillStyle = "white";
-            this.canvasContext.fillText(
-                "Found text: '"+this.canvasBlock.text+"'",
-                this.canvasBlock.left + (margin / 2),
-                this.canvasBlock.bottom + (margin / 2) + 5
-            );
-            this.canvasContext.stroke();
         },
 
         drawFieldsCoordinates() {
@@ -510,6 +540,8 @@ export default {
 
         findTextFromCoordinates: function(coordinates) {
             let me = this;
+
+            // let me = this;
             const data = {
                 screenshotPath: me.response?.data?.screenshotPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
@@ -525,6 +557,17 @@ export default {
                 me.canvasBlock.foundText = null
                 if (res.data?.strings?.strings && res.data.strings.strings.length) {
                     me.canvasBlock.foundText = res.data.strings.strings.join(", ")
+
+                    me.canvasContext.beginPath();
+                    me.canvasContext.fillStyle = "white";
+                    res.data.strings.strings.forEach((line, index) => {
+                        me.canvasContext.fillText(
+                            line,
+                            me.canvasBlock.left,
+                            me.canvasBlock.bottom + (index * 15)
+                        );
+                    })
+                    me.canvasContext.stroke();
                 }
             })
             .catch(function (err) {
