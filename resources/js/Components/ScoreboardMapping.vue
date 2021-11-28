@@ -124,6 +124,13 @@ export default {
             mouse: {
                 x: 0,
                 y: 0,
+                cursor: 'default',
+                drag: {
+                    x: null,
+                    y: null,
+                    enabled: false,
+                    lastEnabledAt: null
+                }
             },
             canvasImages: [],
             canvasBlockSnapshot: null,
@@ -139,16 +146,8 @@ export default {
                 right: 0,
                 bottom: 0,
                 left: 0,
-                cursor: 'default',
-                dragX: 0,
-                dragY: 0,
-                drag: {
-                    x: null,
-                    y: null,
-                    enabled: false,
-                    lastEnabledAt: null
-                }
             },
+            canvasSearchResults: null
         }
     },
 
@@ -181,7 +180,7 @@ export default {
                 'se-resize': 'nwse-resize',
             }
             return {
-                cursor: cursorMap[this.canvasBlock.cursor] ?? this.canvasBlock.cursor
+                cursor: cursorMap[this.mouse.cursor] ?? this.mouse.cursor
             }
         },
     },
@@ -202,64 +201,66 @@ export default {
         canvasBlock: {
             deep: true,
             handler() {
-                this.refreshScreenshot();
+                this.canvasBlockChanged();
             }
         },
-        'canvasBlock.x': function (newValue, oldValue) {
-            this.canvasBlockChanged('x', newValue, oldValue)
-        },
-        'canvasBlock.y': function (newValue, oldValue) {
-            this.canvasBlockChanged('y', newValue, oldValue)
-        },
-        'canvasBlock.width': function (newValue, oldValue) {
-            this.canvasBlockChanged('width', newValue, oldValue)
-        },
-        'canvasBlock.height': function (newValue, oldValue) {
-            this.canvasBlockChanged('height', newValue, oldValue)
+
+        canvasSearchResults: function (newValue, oldValue) {
+            this.canvasSearchResultsDraw()
         },
     },
 
     methods: {
-        canvasBlockChangedDraw(field, newValue, oldValue) {
-            console.log('Console Block Diamaters changed')
-            console.log(field)
-            console.log(newValue)
 
-            const me = this
-            const top = me.canvasBlock.top
-            const right = me.canvasBlock.right
-            const bottom = me.canvasBlock.bottom
-            const left = me.canvasBlock.left
-            let lines = [
-                'top: ' + top,
-                'right: ' + right,
-                'bottom: ' + bottom,
-                'left: ' + left,
-            ];
+        canvasBlockChanged() {
+            let me = this;
+            let hasMoved = false;
 
-            me.canvasContext.beginPath();
-            me.canvasContext.fillStyle = "white";
-            lines.forEach((line, index) => {
-                me.canvasContext.fillText(
-                    line,
-                    me.canvasBlock.right + 20,
-                    me.canvasBlock.top + (index * 10)
-                );
-            })
-            me.canvasContext.stroke();
+            if (me.canvasBlock.x !== me.canvasBlock.left) {
+                me.canvasBlock.x = me.canvasBlock.left;
+                hasMoved = true;
+            }
+            if (me.canvasBlock.y !== me.canvasBlock.top) {
+                me.canvasBlock.y = me.canvasBlock.top;
+                hasMoved = true;
+            }
+            if (me.canvasBlock.right !== (me.canvasBlock.left + parseInt(me.canvasBlock.width))) {
+                me.canvasBlock.right = me.canvasBlock.left + parseInt(me.canvasBlock.width);
+                hasMoved = true;
+            }
+            if (me.canvasBlock.bottom !== (me.canvasBlock.top + parseInt(me.canvasBlock.height))) {
+                me.canvasBlock.bottom = me.canvasBlock.top + parseInt(me.canvasBlock.height);
+                hasMoved = true;
+            }
 
-        },
+            if (hasMoved) {
+                me.refreshScreenshot()
+                return
+            }
 
-        canvasBlockChanged(field, newValue, oldValue) {
             if (typeof this.canvasBlockChangedDrawTimeout === 'number') {
                 clearTimeout(this.canvasBlockChangedDrawTimeout);
                 this.canvasBlockChangedDrawTimeout = undefined;
             }
 
             this.canvasBlockChangedDrawTimeout = setTimeout(() => {
-                this.canvasBlockChangedDraw(field, newValue, oldValue)
-                this.findTextFromCoordinates(this.canvasBlock);
-            }, 1000)
+                me.findTextFromCoordinates(me.canvasBlock);
+            }, 500)
+        },
+
+        canvasSearchResultsDraw() {
+            const me = this
+
+            me.canvasContext.beginPath();
+            me.canvasContext.fillStyle = "white";
+            me.canvasSearchResults.forEach((line, index) => {
+                me.canvasContext.fillText(
+                    line,
+                    me.canvasBlock.left,
+                    me.canvasBlock.bottom + (index * 15)
+                );
+            })
+            me.canvasContext.stroke();
         },
 
         screenshotCanvasMouseDown(e) {
@@ -269,20 +270,20 @@ export default {
                 (this.mouse.x < this.canvasBlock.right) &&
                 (this.mouse.y < this.canvasBlock.bottom)
             ) {
-                this.canvasBlock.drag.x = this.mouse.x - this.canvasBlock.left;
-                this.canvasBlock.drag.y = this.mouse.y - this.canvasBlock.top;
-                this.canvasBlock.drag.enabled = true;
+                this.mouse.drag.x = this.mouse.x - this.canvasBlock.left;
+                this.mouse.drag.y = this.mouse.y - this.canvasBlock.top;
+                this.mouse.drag.enabled = true;
             }
         },
 
         screenshotCanvasMouseUp(e) {
-            this.canvasBlock.drag.enabled = false;
-            this.canvasBlock.drag.lastEnabledAt = Date.now();
+            this.mouse.drag.enabled = false;
+            this.mouse.drag.lastEnabledAt = Date.now();
         },
 
         canvasBlockMove() {
-            this.canvasBlock.top = parseInt(this.mouse.y) - parseInt(this.canvasBlock.drag.y);
-            this.canvasBlock.left = parseInt(this.mouse.x) - parseInt(this.canvasBlock.drag.x);
+            this.canvasBlock.top = parseInt(this.mouse.y) - parseInt(this.mouse.drag.y);
+            this.canvasBlock.left = parseInt(this.mouse.x) - parseInt(this.mouse.drag.x);
         },
 
         canvasBlockChangeCursor() {
@@ -325,45 +326,45 @@ export default {
                 }
             }
 
-            this.canvasBlock.cursor = cursor;
+            this.mouse.cursor = cursor;
         },
 
         canvasBlockResize() {
             let directions = [];
 
-            if (this.canvasBlock.cursor === "s-resize") {
+            if (this.mouse.cursor === "s-resize") {
                 directions.push("down");
             }
 
-            if (this.canvasBlock.cursor === "n-resize") {
+            if (this.mouse.cursor === "n-resize") {
                 directions.push("up");
             }
 
-            if (this.canvasBlock.cursor === "e-resize") {
+            if (this.mouse.cursor === "e-resize") {
                 directions.push("right");
             }
 
-            if (this.canvasBlock.cursor === "w-resize") {
+            if (this.mouse.cursor === "w-resize") {
                 directions.push("left");
             }
 
-            if (this.canvasBlock.cursor === "nw-resize") {
+            if (this.mouse.cursor === "nw-resize") {
                 directions.push("up");
                 directions.push("left");
             }
 
-            if (this.canvasBlock.cursor === "ne-resize") {
+            if (this.mouse.cursor === "ne-resize") {
                 directions.push("up");
                 directions.push("right");
             }
 
 
-            if (this.canvasBlock.cursor === "sw-resize") {
+            if (this.mouse.cursor === "sw-resize") {
                 directions.push("down");
                 directions.push("left");
             }
 
-            if (this.canvasBlock.cursor === "se-resize") {
+            if (this.mouse.cursor === "se-resize") {
                 directions.push("down");
                 directions.push("right");
             }
@@ -402,8 +403,8 @@ export default {
             this.mouse.x = e.offsetX;
             this.mouse.y = e.offsetY;
 
-            if (this.canvasBlock.drag.enabled) {
-                if (this.canvasBlock.cursor === 'move') {
+            if (this.mouse.drag.enabled) {
+                if (this.mouse.cursor === 'move') {
                     this.canvasBlockMove();
                 } else {
                     this.canvasBlockResize();
@@ -548,27 +549,10 @@ export default {
                 textCoordinates: coordinates ?? me.textCoordinates,
             };
 
-            const CancelToken = axios.CancelToken;
-            const source = CancelToken.source();
             axios.get('/screenshot/mapping/text', {
-                cancelToken: source.token,
                 params: data
             }).then(function (res) {
-                me.canvasBlock.foundText = null
-                if (res.data?.strings?.strings && res.data.strings.strings.length) {
-                    me.canvasBlock.foundText = res.data.strings.strings.join(", ")
-
-                    me.canvasContext.beginPath();
-                    me.canvasContext.fillStyle = "white";
-                    res.data.strings.strings.forEach((line, index) => {
-                        me.canvasContext.fillText(
-                            line,
-                            me.canvasBlock.left,
-                            me.canvasBlock.bottom + (index * 15)
-                        );
-                    })
-                    me.canvasContext.stroke();
-                }
+                me.canvasSearchResults = res.data?.strings?.strings
             })
             .catch(function (err) {
                 me.output = err;
