@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientExceptionController;
 use App\Http\Controllers\ScreenshotController;
 use App\Http\Controllers\ScreenshotMappingController;
+use App\Http\Controllers\PlayerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,9 +22,7 @@ Route::get('/', function () {
     return Inertia::render('Log');
 })->name('log');
 
-Route::get('/players', function () {
-    return Inertia::render('Players');
-})->name('players');
+Route::resource('players', PlayerController::class);
 
 Route::get('/matches', function () {
     return Inertia::render('Matches');

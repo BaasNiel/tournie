@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Player;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        /**
+         * Create a user that we can log in with
+         */
+        User::factory()->create([
+            'name' => 'Demo Admin',
+            'email' => 'demo@demo.com',
+        ]);
+
+        $this->call(PlayerSeeder::class);
         $this->call(PlayerAliasSeeder::class);
     }
 }
