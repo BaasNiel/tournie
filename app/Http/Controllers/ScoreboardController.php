@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ClientDecisionException;
-use App\Services\ScreenshotMappingService;
-use App\Services\ScreenshotGoogleService;
-use App\Services\ScreenshotImageService;
+use App\Services\ScoreboardMappingService;
+use App\Services\ScoreboardGoogleService;
+use App\Services\ScoreboardImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ScoreboardController extends Controller
 {
     public function __construct(
-        private ScreenshotGoogleService $screenshotGoogleService,
-        private ScreenshotImageService $screenshotImageService,
-        private ScreenshotMappingService $screenshotMappingService
+        private ScoreboardGoogleService $scoreboardGoogleService,
+        private ScoreboardImageService $scoreboardImageService,
+        private ScoreboardMappingService $scoreboardMappingService
     ) {}
 
     public function upload(Request $request)
@@ -23,23 +23,23 @@ class ScoreboardController extends Controller
            'file' => 'required|mimes:jpg,jpeg,png|max:2048'
         ]);
 
-        $screenshot = $request->file('file') ?? null;
-        if (!$screenshot) {
+        $scoreboard = $request->file('file') ?? null;
+        if (!$scoreboard) {
             return response()->json([
                 'success' => false,
-                'message' => 'No screenshot image found'
+                'message' => 'No scoreboard image found'
             ]);
         }
 
-        $screenshotContent = file_get_contents($screenshot);
-        $screenshotPath = 'screenshots/'.md5($screenshotContent).'/screenshot.'.$screenshot->extension();
+        $scoreboardContent = file_get_contents($scoreboard);
+        $scoreboardPath = 'scoreboards/'.md5($scoreboardContent).'/scoreboard.'.$scoreboard->extension();
 
-        if (!Storage::disk('public')->exists($screenshotPath)) {
-            Storage::disk('public')->put($screenshotPath, $screenshotContent);
+        if (!Storage::disk('public')->exists($scoreboardPath)) {
+            Storage::disk('public')->put($scoreboardPath, $scoreboardContent);
         }
 
-        // $stats = $this->screenshotImageService->convertToStats($screenshotPath);
-        // $data = $this->screenshotMappingService->findShit($screenshotPath);
+        // $stats = $this->scoreboardImageService->convertToStats($scoreboardPath);
+        // $data = $this->scoreboardMappingService->findShit($scoreboardPath);
 
         $message = 'Do the mapping';
         throw new ClientDecisionException($message, [
@@ -48,9 +48,9 @@ class ScoreboardController extends Controller
                 'endpoint' => '/client-exception/option'
             ],
             'urls' => [
-                'image' => Storage::url($screenshotPath),
+                'image' => Storage::url($scoreboardPath),
             ],
-            'screenshotPath' => $screenshotPath,
+            'scoreboardPath' => $scoreboardPath,
             'type' => 'mapping',
             'label' => 'Do the mapping!',
         ]);
@@ -58,7 +58,7 @@ class ScoreboardController extends Controller
         return response()->json([
             'success' => true,
             'urls' => [
-                'image' => Storage::url($screenshotPath),
+                'image' => Storage::url($scoreboardPath),
             ]
         ]);
     }

@@ -2,48 +2,48 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ScreenshotSlotKey;
-use App\Services\ScreenshotMappingService;
+use App\Enums\ScoreboardSlotKey;
+use App\Services\ScoreboardMappingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ScoreboardMappingController extends Controller {
 
     public function __construct(
-        private ScreenshotMappingService $screenshotMappingService
+        private ScoreboardMappingService $scoreboardMappingService
     ) { }
 
     public function findTextCoordinates(Request $request)
     {
-        $screenshotPath = $request->get('screenshotPath');
+        $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $text = $request->get('text');
 
-        $textCoordinates = $this->screenshotMappingService->findTextCoordinates(
-            $screenshotPath,
+        $textCoordinates = $this->scoreboardMappingService->findTextCoordinates(
+            $scoreboardPath,
             $text
         );
 
-        $slots = $this->screenshotMappingService->getAvailableSlots(
-            $screenshotPath,
+        $slots = $this->scoreboardMappingService->getAvailableSlots(
+            $scoreboardPath,
             $anchorCoordinates
         );
 
         // Only available slot is the anchor
         $slotKeys = [
-            ScreenshotSlotKey::ANCHOR
+            ScoreboardSlotKey::ANCHOR
         ];
 
         // Filter slots by config
         if ($anchorCoordinates) {
             $config = [];
-            $path = 'config/screenshot-1.json';
+            $path = 'config/scoreboard-1.json';
             if (Storage::disk('local')->exists($path)) {
                 $config = json_decode(Storage::disk('local')->get($path), true);
             }
 
             $configSlots = array_keys($config['anchors'][$anchorCoordinates['text']]['slots']) ?? [];
-            $slotKeys = collect(config('screenshot.slots'))->filter(function ($slotKey) use ($configSlots) {
+            $slotKeys = collect(config('scoreboard.slots'))->filter(function ($slotKey) use ($configSlots) {
                 return !in_array($slotKey, $configSlots);
             })->values();
         }
@@ -59,25 +59,25 @@ class ScoreboardMappingController extends Controller {
 
     public function findTextFromCoordinates(Request $request)
     {
-        $screenshotPath = $request->get('screenshotPath');
+        $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $textCoordinates = json_decode($request->get('textCoordinates', null), true);
 
-        $strings = $this->screenshotMappingService->findTextFromCoordinates(
-            $screenshotPath,
+        $strings = $this->scoreboardMappingService->findTextFromCoordinates(
+            $scoreboardPath,
             $anchorCoordinates,
             $textCoordinates
         );
 
-        $slots = $this->screenshotMappingService->getAvailableSlots(
-            $screenshotPath,
+        $slots = $this->scoreboardMappingService->getAvailableSlots(
+            $scoreboardPath,
             $anchorCoordinates,
             $textCoordinates
         );
 
         return response()->json([
             'success' => true,
-            'screenshotPath' => $screenshotPath,
+            'scoreboardPath' => $scoreboardPath,
             'strings' => $strings,
             'slots' => $slots
         ]);
@@ -85,20 +85,20 @@ class ScoreboardMappingController extends Controller {
 
     public function saveSlot(Request $request)
     {
-        $screenshotPath = $request->get('screenshotPath');
+        $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = $request->get('anchorCoordinates');
         $textCoordinates = $request->get('textCoordinates');
-        $slotKey = ScreenshotSlotKey::fromKey($request->get('slotKey'));
+        $slotKey = ScoreboardSlotKey::fromKey($request->get('slotKey'));
 
-        $response = $this->screenshotMappingService->updateOrCreateSlot(
-            $screenshotPath,
+        $response = $this->scoreboardMappingService->updateOrCreateSlot(
+            $scoreboardPath,
             $anchorCoordinates,
             $textCoordinates,
             $slotKey
         );
 
-        $slots = $this->screenshotMappingService->getAvailableSlots(
-            $screenshotPath,
+        $slots = $this->scoreboardMappingService->getAvailableSlots(
+            $scoreboardPath,
             $anchorCoordinates,
             $textCoordinates
         );
@@ -108,14 +108,14 @@ class ScoreboardMappingController extends Controller {
         return response()->json($response);
 
         $config = [];
-        $path = 'config/screenshot-1.json';
+        $path = 'config/scoreboard-1.json';
         if (Storage::disk('local')->exists($path)) {
             $config = json_decode(Storage::disk('local')->get($path), true);
         }
 
         $textCoordinates['slotKey'] = $slotKey;
 
-        if (ScreenshotSlotKey::ANCHOR === $slotKey) {
+        if (ScoreboardSlotKey::ANCHOR === $slotKey) {
             $anchorCoordinates = $textCoordinates;
             $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
         } else if (!empty($anchorCoordinates)) {
@@ -130,7 +130,7 @@ class ScoreboardMappingController extends Controller {
 
         return response()->json([
             'success' => true,
-            'screenshotPath' => $screenshotPath,
+            'scoreboardPath' => $scoreboardPath,
             'anchorCoordinates' => $anchorCoordinates,
             'textCoordinates' => $textCoordinates,
             'slotKey' => $slotKey
@@ -139,11 +139,11 @@ class ScoreboardMappingController extends Controller {
 
     public function saveAnchor(Request $request)
     {
-        $screenshotPath = $request->get('screenshotPath');
+        $scoreboardPath = $request->get('scoreboardPath');
         $textCoordinates = $request->get('textCoordinates');
 
         $config = [];
-        $path = 'config/screenshot.json';
+        $path = 'config/scoreboard.json';
         if (Storage::disk('local')->exists($path)) {
             $config = json_decode(Storage::disk('local')->get($path), true);
         }
@@ -162,13 +162,13 @@ class ScoreboardMappingController extends Controller {
 
     public function saveField(Request $request)
     {
-        $screenshotPath = $request->get('screenshotPath');
+        $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = $request->get('anchorCoordinates');
         $textCoordinates = $request->get('textCoordinates');
         $fieldType = $request->get('fieldType');
 
         $config = [];
-        $path = 'config/screenshot.json';
+        $path = 'config/scoreboard.json';
         if (Storage::disk('local')->exists($path)) {
             $config = json_decode(Storage::disk('local')->get($path), true);
         }

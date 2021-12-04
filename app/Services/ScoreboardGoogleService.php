@@ -7,7 +7,7 @@ use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
-class ScreenshotGoogleService
+class ScoreboardGoogleService
 {
     public function __construct(
         private ImageAnnotatorClient $imageAnnotatorClient
@@ -18,9 +18,9 @@ class ScreenshotGoogleService
         $this->imageAnnotatorClient->close();
     }
 
-    public function getData(string $screenshotPath): array
+    public function getData(string $scoreboardPath): array
     {
-        $jsonFilepath = dirname($screenshotPath).'/lines.json';
+        $jsonFilepath = dirname($scoreboardPath).'/lines.json';
 
         // Caching load
         if (Storage::disk('public')->exists($jsonFilepath)) {
@@ -28,8 +28,8 @@ class ScreenshotGoogleService
             return json_decode($data, true);
         }
 
-        $annotateImageResponse = $this->annotateImage($screenshotPath);
-        $data = $this->getScreenshotTextAnnotations($annotateImageResponse);
+        $annotateImageResponse = $this->annotateImage($scoreboardPath);
+        $data = $this->getScoreboardTextAnnotations($annotateImageResponse);
 
         // Caching save
         Storage::disk('public')->put($jsonFilepath, json_encode($data));
@@ -37,7 +37,7 @@ class ScreenshotGoogleService
         return $data;
     }
 
-    private function getScreenshotTextAnnotations(AnnotateImageResponse $annotateImageResponse): array
+    private function getScoreboardTextAnnotations(AnnotateImageResponse $annotateImageResponse): array
     {
         $textAnnotations = $annotateImageResponse->getTextAnnotations();
 
@@ -75,9 +75,9 @@ class ScreenshotGoogleService
         ];
     }
 
-    private function annotateImage(string $screenshotPath): AnnotateImageResponse
+    private function annotateImage(string $scoreboardPath): AnnotateImageResponse
     {
-        $image = Storage::disk('public')->get($screenshotPath);
+        $image = Storage::disk('public')->get($scoreboardPath);
         return $this->imageAnnotatorClient->textDetection($image);
     }
 }

@@ -9,7 +9,7 @@ use BenSampo\Enum\Enum;
  * @method static static PLAYER_AND_CLAN()
  * @method static static KILLS()
  */
-final class ScreenshotSlotKey extends Enum
+final class ScoreboardSlotKey extends Enum
 {
     const ANCHOR = 'ANCHOR';
     const PLAYER_AND_CLAN = 'PLAYER_AND_CLAN';

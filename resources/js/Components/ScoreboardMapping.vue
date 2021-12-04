@@ -41,13 +41,13 @@
     </div>
     <div class="container mx-auto overflow-y-scroll">
         <canvas
-            ref="screenshotCanvas"
+            ref="scoreboardCanvas"
             :style="canvasStyle"
             :width="width"
             :height="height"
-            @mousemove="screenshotCanvasMouseMove"
-            @mousedown="screenshotCanvasMouseDown"
-            @mouseup="screenshotCanvasMouseUp"
+            @mousemove="scoreboardCanvasMouseMove"
+            @mousedown="scoreboardCanvasMouseDown"
+            @mouseup="scoreboardCanvasMouseUp"
         />
     </div>
 
@@ -118,18 +118,18 @@ export default {
     },
 
     mounted() {
-        this.refreshScreenshot();
+        this.refreshScoreboard();
 
         // Not sure why? But it works...
-        this.refreshScreenshot();
+        this.refreshScoreboard();
     },
 
     computed: {
-        screenshotUrl() {
+        scoreboardUrl() {
             return this.response?.data?.urls?.image;
         },
         canvas: function () {
-            return this.$refs?.screenshotCanvas;
+            return this.$refs?.scoreboardCanvas;
         },
         canvasContext: function () {
             return this.canvas?.getContext('2d');
@@ -155,13 +155,13 @@ export default {
         'mapping.anchorCoordinates': {
             deep: true,
             handler() {
-                this.refreshScreenshot();
+                this.refreshScoreboard();
             }
         },
         'mapping.fieldsCoordinates': {
             deep: true,
             handler() {
-                this.refreshScreenshot();
+                this.refreshScoreboard();
             }
         },
         canvasBlock: {
@@ -200,7 +200,7 @@ export default {
             }
 
             if (hasMoved) {
-                me.refreshScreenshot()
+                me.refreshScoreboard()
                 return
             }
 
@@ -248,7 +248,7 @@ export default {
             }
         },
 
-        screenshotCanvasMouseDown(e) {
+        scoreboardCanvasMouseDown(e) {
             if (
                 (this.mouse.x > this.canvasBlock.left) &&
                 (this.mouse.y > this.canvasBlock.top) &&
@@ -261,7 +261,7 @@ export default {
             }
         },
 
-        screenshotCanvasMouseUp(e) {
+        scoreboardCanvasMouseUp(e) {
             this.mouse.drag.enabled = false;
             this.mouse.drag.lastEnabledAt = Date.now();
         },
@@ -384,7 +384,7 @@ export default {
             }
         },
 
-        screenshotCanvasMouseMove(e) {
+        scoreboardCanvasMouseMove(e) {
             this.mouse.x = e.offsetX;
             this.mouse.y = e.offsetY;
 
@@ -479,7 +479,7 @@ export default {
 
         },
 
-        refreshScreenshot() {
+        refreshScoreboard() {
             let me = this;
 
             me.canvasBlock.x = me.canvasBlock.left;
@@ -488,10 +488,10 @@ export default {
             me.canvasBlock.bottom = me.canvasBlock.top + parseInt(me.canvasBlock.height);
 
             if (!me.canvasContext) { return; }
-            if (!me.screenshotUrl) { return; }
+            if (!me.scoreboardUrl) { return; }
 
             let image = new Image();
-            image.src = me.screenshotUrl;
+            image.src = me.scoreboardUrl;
             image.onload = function() {
                 me.height = image.height;
                 me.width = image.width;
@@ -506,7 +506,7 @@ export default {
         findTextCoordinates() {
             let me = this;
             const data = {
-                screenshotPath: me.response?.data?.screenshotPath,
+                scoreboardPath: me.response?.data?.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 text: me.form.text,
             };
@@ -542,7 +542,7 @@ export default {
 
             // let me = this;
             const data = {
-                screenshotPath: me.response?.data?.screenshotPath,
+                scoreboardPath: me.response?.data?.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 textCoordinates: coordinates ?? me.textCoordinates,
             };
@@ -562,7 +562,7 @@ export default {
             let me = this;
 
             const data = {
-                screenshotPath: me.response?.data?.screenshotPath,
+                scoreboardPath: me.response?.data?.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates,
                 textCoordinates: textCoordinates,
                 slotKey: me.mapping.slotKey,

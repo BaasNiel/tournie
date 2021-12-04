@@ -1,13 +1,13 @@
 <?php
 
 use App\Enums\HeroField;
-use App\Enums\ScreenshotSlotKey;
+use App\Enums\ScoreboardSlotKey;
 
 return [
     'slots' => [
-        ScreenshotSlotKey::ANCHOR,
-        ScreenshotSlotKey::PLAYER_AND_CLAN,
-        ScreenshotSlotKey::KILLS,
+        ScoreboardSlotKey::ANCHOR,
+        ScoreboardSlotKey::PLAYER_AND_CLAN,
+        ScoreboardSlotKey::KILLS,
     ],
     'fieldTypes' => [
         HeroField::player => 'playerNames',

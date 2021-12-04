@@ -16,7 +16,7 @@
         :response="response"
     />
 
-    <div v-if="response.data.type === 'screenshot-key-mapping'">
+    <div v-if="response.data.type === 'scoreboard-key-mapping'">
 
         <div v-for="(validation, validationIndex) in response.data.validationData.validations" :key="validationIndex">
             <h1>Validation attempt #{{ validationIndex }}</h1>

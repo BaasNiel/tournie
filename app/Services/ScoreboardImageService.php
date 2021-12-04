@@ -8,15 +8,15 @@ use App\Models\PlayerAlias;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class ScreenshotImageService
+class ScoreboardImageService
 {
     public function __construct(
-        private ScreenshotGoogleService $screenshotGoogleService
+        private ScoreboardGoogleService $scoreboardGoogleService
     ) {}
 
-    public function convertToStats(string $screenshotPath): array
+    public function convertToStats(string $scoreboardPath): array
     {
-        $data = $this->screenshotGoogleService->getData($screenshotPath);
+        $data = $this->scoreboardGoogleService->getData($scoreboardPath);
         $lines = collect($data['lines']);
         $heroes = $this->getHeroes($lines);
         $stats = $this->getStats($lines);
@@ -167,7 +167,7 @@ class ScreenshotImageService
                 'method' => 'POST',
                 'endpoint' => '/client-exception/option'
             ],
-            'type' => 'screenshot-key-mapping',
+            'type' => 'scoreboard-key-mapping',
             'label' => 'No mapping found',
             'validationData' => $validationData
         ]);
@@ -268,9 +268,10 @@ class ScreenshotImageService
         ];
     }
 
-    private function getScreenshotLines(string $screenshotPath): Collection
+    /*
+    private function getScoreboardLines(string $scoreboardPath): Collection
     {
-        $lines = $this->screenshotGoogleService->getLines($screenshotPath);
+        $lines = $this->scoreboardGoogleService->getLines($scoreboardPath);
         $lines = $this->filterLines($lines);
         $lines = $this->mergeHeroNameLines($lines);
 
@@ -286,6 +287,7 @@ class ScreenshotImageService
             return $line;
         });
     }
+    */
 
     private function filterLines(Collection $lines): Collection
     {

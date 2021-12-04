@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Enums\ScreenshotSlotKey;
+use App\Enums\ScoreboardSlotKey;
 use Illuminate\Support\Facades\Storage;
 
-class ScreenshotMappingService
+class ScoreboardMappingService
 {
     public function findTextFromCoordinates(
-        string $screenshotPath,
+        string $scoreboardPath,
         array $anchorCoordinates = null,
         array $textCoordinates = null
     ): array {
@@ -33,7 +33,7 @@ class ScreenshotMappingService
 
 
         // Walk through blocks and get all the text
-        $data = $this->getJsonData($screenshotPath);
+        $data = $this->getJsonData($scoreboardPath);
 
         $boundaries = [
             'top' => $coordinates['y'],
@@ -80,9 +80,9 @@ class ScreenshotMappingService
         ];
     }
 
-    public function findTextCoordinates(string $screenshotPath, string $text): ?array
+    public function findTextCoordinates(string $scoreboardPath, string $text): ?array
     {
-        $data = $this->getJsonData($screenshotPath);
+        $data = $this->getJsonData($scoreboardPath);
         foreach ($data['blocks'] as $block)  {
             if ($block['text'] === $text) {
                 return $block['dimensions'];
@@ -91,39 +91,39 @@ class ScreenshotMappingService
     }
 
     public function getAvailableSlots(
-        string $screenshotPath,
+        string $scoreboardPath,
         ?array $anchorCoordinates,
     ): ?array
     {
-        $path = 'config/screenshot-2.json';
+        $path = 'config/scoreboard-2.json';
         $anchorText = 'Radiant';
-        $config = $this->getConfig($screenshotPath);
+        $config = $this->getConfig($scoreboardPath);
         $configSlots = collect($config['anchors'][$anchorText]['slots'] ?? []);
 
-        $anchor = $configSlots->firstWhere('slotKey', ScreenshotSlotKey::ANCHOR);
+        $anchor = $configSlots->firstWhere('slotKey', ScoreboardSlotKey::ANCHOR);
         if (!$anchor) {
             return [
-                ScreenshotSlotKey::ANCHOR
+                ScoreboardSlotKey::ANCHOR
             ];
         }
 
         // Filter slots by config
-        return collect(config('screenshot.slots'))->filter(function ($slotKey) use ($configSlots) {
+        return collect(config('scoreboard.slots'))->filter(function ($slotKey) use ($configSlots) {
             return !$configSlots->pluck('slotKey')->contains($slotKey);
         })->values()->toArray();
     }
 
     public function updateOrCreateSlot(
-        string $screenshotPath,
+        string $scoreboardPath,
         ?array $anchorCoordinates,
         array $textCoordinates,
-        ScreenshotSlotKey $slotKey
+        ScoreboardSlotKey $slotKey
     ): array {
-        $config = $this->getConfig($screenshotPath);
+        $config = $this->getConfig($scoreboardPath);
 
         $textCoordinates['slotKey'] = $slotKey->value;
 
-        if ($slotKey->value === ScreenshotSlotKey::ANCHOR) {
+        if ($slotKey->value === ScoreboardSlotKey::ANCHOR) {
             $anchorCoordinates = $textCoordinates;
             $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
         }
@@ -134,17 +134,17 @@ class ScreenshotMappingService
 
         $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey->value] = $textCoordinates;
 
-        $this->saveConfig($screenshotPath, $config);
+        $this->saveConfig($scoreboardPath, $config);
 
         return [
             'success' => true,
-            'screenshotPath' => $screenshotPath,
+            'scoreboardPath' => $scoreboardPath,
             'anchorCoordinates' => $anchorCoordinates,
             'textCoordinates' => $textCoordinates,
             'slotKey' => $slotKey
         ];
 
-        // if (ScreenshotSlotKey::ANCHOR === $slotKey) {
+        // if (ScoreboardSlotKey::ANCHOR === $slotKey) {
         //     $anchorCoordinates = $textCoordinates;
         //     $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
         // } else if (!empty($anchorCoordinates)) {
@@ -155,28 +155,28 @@ class ScreenshotMappingService
 
         // $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey] = $textCoordinates;
 
-        // $this->saveConfig($screenshotPath, $config);
+        // $this->saveConfig($scoreboardPath, $config);
 
         // return [
         //     'success' => true,
-        //     'screenshotPath' => $screenshotPath,
+        //     'scoreboardPath' => $scoreboardPath,
         //     'anchorCoordinates' => $anchorCoordinates,
         //     'textCoordinates' => $textCoordinates,
         //     'slotKey' => $slotKey
         // ];
     }
 
-    private function getConfig(string $screenshotPath): ?array
+    private function getConfig(string $scoreboardPath): ?array
     {
-        $path = 'config/screenshot-2.json';
+        $path = 'config/scoreboard-2.json';
         if (Storage::disk('local')->exists($path)) {
             return json_decode(Storage::disk('local')->get($path), true);
         }
     }
 
-    private function saveConfig(string $screenshotPath, array $config): bool
+    private function saveConfig(string $scoreboardPath, array $config): bool
     {
-        $path = 'config/screenshot-2.json';
+        $path = 'config/scoreboard-2.json';
         return Storage::disk('local')->put($path, json_encode($config, JSON_PRETTY_PRINT));
     }
 
@@ -188,8 +188,8 @@ class ScreenshotMappingService
         return $this->getAnchorCoordinates() ? true : false;
     }
 
-    private function getJsonData(string $screenshotPath): array {
-        $jsonFilepath = dirname($screenshotPath).'/lines.json';
+    private function getJsonData(string $scoreboardPath): array {
+        $jsonFilepath = dirname($scoreboardPath).'/lines.json';
         return json_decode(Storage::disk('public')->get($jsonFilepath), true);
     }
 }

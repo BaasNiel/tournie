@@ -28,12 +28,9 @@ Route::get('/matches', function () {
     return Inertia::render('Matches');
 })->name('matches');
 
+// To-do: (move to api)
 Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
-->name('clientExceptionPost');
-
-Route::get('/screenshots', function () {
-    return Inertia::render('Screenshots');
-})->name('screenshots');
+    ->name('clientExceptionPost');
 
 Route::prefix('scoreboard')->group(function () {
 
@@ -42,7 +39,7 @@ Route::prefix('scoreboard')->group(function () {
         return Inertia::render('Scoreboard');
     })->name('scoreboard');
 
-    // (move to api)
+    // To-do: (move to api)
     Route::post('/', [ScoreboardController::class, 'upload']);
     Route::prefix('mapping')->group(function () {
         Route::get('/text', [ScoreboardMappingController::class, 'findTextFromCoordinates']);
