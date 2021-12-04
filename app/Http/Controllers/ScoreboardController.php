@@ -2,19 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Hero;
 use App\Exceptions\ClientDecisionException;
-use App\Models\PlayerAlias;
 use App\Services\ScreenshotMappingService;
 use App\Services\ScreenshotGoogleService;
 use App\Services\ScreenshotImageService;
-use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
-class ScreenshotController extends Controller
+class ScoreboardController extends Controller
 {
     public function __construct(
         private ScreenshotGoogleService $screenshotGoogleService,

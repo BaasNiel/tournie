@@ -1,10 +1,10 @@
 <template>
-    <Head title="Snapshots" />
+    <Head title="Scoreboard" />
 
     <Layout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Snapshots
+                Scoreboard
             </h2>
         </template>
 
@@ -98,7 +98,7 @@ export default {
             let data = new FormData();
             data.append('file', this.file);
 
-            axios.post('/screenshot', data, config)
+            axios.post('/scoreboard', data, config)
                 .then(function (res) {
                     me.response = res.data;
                 })

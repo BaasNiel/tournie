@@ -513,7 +513,7 @@ export default {
 
             me.mapping.fieldType = [];
             me.mapping.fieldTypes = null;
-            axios.get('/screenshot/mapping/text/coordinates', {params: data})
+            axios.get('/scoreboard/mapping/text/coordinates', {params: data})
                 .then(function (res) {
                     me.mapping.fieldTypes = res.data.fieldTypes;
                     const coordinates = {
@@ -547,7 +547,7 @@ export default {
                 textCoordinates: coordinates ?? me.textCoordinates,
             };
 
-            axios.get('/screenshot/mapping/text', {
+            axios.get('/scoreboard/mapping/text', {
                 params: data
             }).then(function (res) {
                 me.canvasSearchResults = res.data?.strings?.strings;
@@ -568,7 +568,7 @@ export default {
                 slotKey: me.mapping.slotKey,
             };
 
-            axios.post('/screenshot/mapping/slot', data)
+            axios.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
                     me.mapping.fieldsCoordinates.push(response.data.textCoordinates);
                     me.textCoordinates = null;

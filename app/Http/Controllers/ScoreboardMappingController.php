@@ -7,7 +7,7 @@ use App\Services\ScreenshotMappingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class ScreenshotMappingController extends Controller {
+class ScoreboardMappingController extends Controller {
 
     public function __construct(
         private ScreenshotMappingService $screenshotMappingService
