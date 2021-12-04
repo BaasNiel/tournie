@@ -3,7 +3,7 @@
     <div class="container mx-auto w-full">
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <BreezeLabel for="text" value="Text" />
+                <BreezeLabel for="text" value="Anchor Text" />
                 <BreezeInput
                     id="text"
                     type="text"
@@ -11,65 +11,31 @@
                     v-model="form.text"
                     required
                 />
+                <BreezeLabel for="slotKey" value="Slot" />
+                <Multiselect
+                    id="slotKey"
+                    v-model="mapping.slotKey"
+                    :options="mapping.availableSlots"
+                />
                 <BreezeButton @click="findTextCoordinates" class="mt-5">
                     Find Text
                 </BreezeButton>
+                <BreezeButton
+                    class="mt-5 ml-5"
+                    @click="saveSlot(canvasBlock)"
+                >
+                    Save Slot
+                </BreezeButton>
+
+                <BreezeButton
+                    class="mt-5 ml-5"
+                    @click="findTextFromCoordinates(canvasBlock)"
+                >
+                    Find Text from Coordinates
+                </BreezeButton>
             </div>
             <div>
-                <div v-if="canvasBlock">
-                    <BreezeLabel for="x" value="x" />
-                    <BreezeInput
-                        id="x"
-                        type="text"
-                        class="mt-1 block w-full"
-                        v-model="canvasBlock.x"
-                    />
-
-                    <BreezeLabel for="y" value="y" />
-                    <BreezeInput
-                        id="y"
-                        type="text"
-                        class="mt-1 block w-full"
-                        v-model="canvasBlock.y"
-                    />
-
-                    <BreezeLabel for="width" value="Width" />
-                    <BreezeInput
-                        id="width"
-                        type="text"
-                        class="mt-1 block w-full"
-                        v-model="canvasBlock.width"
-                    />
-                    <BreezeLabel for="height" value="height" />
-                    <BreezeInput
-                        id="height"
-                        type="text"
-                        class="mt-1 block w-full"
-                        v-model="canvasBlock.height"
-                    />
-
-                    <BreezeLabel for="slotKey" value="Slot" />
-                    <Multiselect
-                        id="slotKey"
-                        v-model="mapping.slotKey"
-                        :options="mapping.slotKeys"
-                    />
-
-                    <BreezeButton
-                        class="mt-5"
-                        @click="saveSlot(canvasBlock)"
-                    >
-                        Save Slot
-                    </BreezeButton>
-
-                    <BreezeButton
-                        class="mt-5"
-                        @click="findTextFromCoordinates(canvasBlock)"
-                    >
-                        Find Text from Coordinates
-                    </BreezeButton>
-
-                </div>
+                <pre v-if="canvasBlock"><code>{{ canvasBlock }}</code></pre>
             </div>
         </div>
     </div>
@@ -118,7 +84,7 @@ export default {
                 fieldTypes: [],
 
                 slotKey: null,
-                slotKeys: [],
+                availableSlots: []
             },
 
             mouse: {
@@ -250,17 +216,36 @@ export default {
 
         canvasSearchResultsDraw() {
             const me = this
+            const left = me.canvasBlock.left + 10
+            const top = me.canvasBlock.bottom + 10
+            const count = me.canvasSearchResults?.length ?? 0
 
+            // Add box
             me.canvasContext.beginPath();
-            me.canvasContext.fillStyle = "white";
-            me.canvasSearchResults.forEach((line, index) => {
-                me.canvasContext.fillText(
-                    line,
-                    me.canvasBlock.left,
-                    me.canvasBlock.bottom + (index * 15)
-                );
-            })
+            me.canvasContext.fillStyle = "black";
+            me.canvasContext.globalAlpha = 0.8;
+            me.canvasContext.fillRect(
+                left - 5,
+                top - 10,
+                me.canvasBlock.width - 10,
+                (10 + (count * 10))
+            );
+            me.canvasContext.globalAlpha = 1;
             me.canvasContext.stroke();
+
+            // Add lines
+            if (me.canvasSearchResults?.length) {
+                me.canvasContext.beginPath();
+                me.canvasContext.fillStyle = "white";
+                me.canvasSearchResults.forEach((line, index) => {
+                    me.canvasContext.fillText(
+                        line,
+                        left,
+                        top + (index * 10)
+                    );
+                });
+                me.canvasContext.stroke();
+            }
         },
 
         screenshotCanvasMouseDown(e) {
@@ -420,6 +405,18 @@ export default {
             if (!me.canvasBlock) { return; };
 
             me.canvasContext.beginPath();
+            me.canvasContext.fillStyle = "white";
+            me.canvasContext.globalAlpha = 0.2;
+            me.canvasContext.fillRect(
+                me.canvasBlock.left + (margin / 2),
+                me.canvasBlock.top + (margin / 2),
+                me.canvasBlock.width - margin,
+                me.canvasBlock.height - margin,
+            );
+            me.canvasContext.globalAlpha = 1;
+            me.canvasContext.stroke();
+
+            me.canvasContext.beginPath();
             me.canvasContext.strokeStyle = "white";
             me.canvasContext.rect(
                 me.canvasBlock.left + (margin / 2),
@@ -427,11 +424,13 @@ export default {
                 me.canvasBlock.width - margin,
                 me.canvasBlock.height - margin,
             );
+            me.canvasContext.stroke();
 
+            me.canvasContext.beginPath();
             me.canvasContext.fillStyle = "white";
             me.canvasContext.setLineDash([6, 3]);
             me.canvasContext.fillText(
-                "Text: '"+me.canvasBlock.text+"'",
+                "Search Block",
                 me.canvasBlock.left + (margin / 2),
                 me.canvasBlock.top + (margin / 2) - 5
             );
@@ -516,7 +515,6 @@ export default {
             me.mapping.fieldTypes = null;
             axios.get('/screenshot/mapping/text/coordinates', {params: data})
                 .then(function (res) {
-                    me.mapping.slotKeys = res.data.slotKeys;
                     me.mapping.fieldTypes = res.data.fieldTypes;
                     const coordinates = {
                         x: res.data.textCoordinates.tl.x,
@@ -552,7 +550,8 @@ export default {
             axios.get('/screenshot/mapping/text', {
                 params: data
             }).then(function (res) {
-                me.canvasSearchResults = res.data?.strings?.strings
+                me.canvasSearchResults = res.data?.strings?.strings;
+                me.mapping.availableSlots = res.data?.availableSlots;
             })
             .catch(function (err) {
                 me.output = err;
@@ -577,6 +576,8 @@ export default {
                     if (response.data.anchorCoordinates) {
                         me.mapping.anchorCoordinates = response.data.anchorCoordinates;
                     }
+
+                    me.mapping.availableSlots = res.data?.availableSlots;
                 })
                 .catch(function (err) {
                     me.output = err;

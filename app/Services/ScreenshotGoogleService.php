@@ -15,7 +15,7 @@ class ScreenshotGoogleService
 
     public function __destruct()
     {
-        $this->imageAnnotator->close();
+        $this->imageAnnotatorClient->close();
     }
 
     public function getData(string $screenshotPath): array

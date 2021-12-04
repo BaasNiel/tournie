@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Hero;
 use App\Exceptions\ClientDecisionException;
 use App\Models\PlayerAlias;
-use App\Services\ScreenshotDimensionsService;
+use App\Services\ScreenshotMappingService;
 use App\Services\ScreenshotGoogleService;
 use App\Services\ScreenshotImageService;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
@@ -19,7 +19,7 @@ class ScreenshotController extends Controller
     public function __construct(
         private ScreenshotGoogleService $screenshotGoogleService,
         private ScreenshotImageService $screenshotImageService,
-        private ScreenshotDimensionsService $screenshotDimensionsService
+        private ScreenshotMappingService $screenshotMappingService
     ) {}
 
     public function upload(Request $request)
@@ -44,7 +44,7 @@ class ScreenshotController extends Controller
         }
 
         // $stats = $this->screenshotImageService->convertToStats($screenshotPath);
-        // $data = $this->screenshotDimensionsService->findShit($screenshotPath);
+        // $data = $this->screenshotMappingService->findShit($screenshotPath);
 
         $message = 'Do the mapping';
         throw new ClientDecisionException($message, [

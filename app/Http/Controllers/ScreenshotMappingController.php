@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ScreenshotSlotKey;
-use App\Services\ScreenshotDimensionsService;
+use App\Services\ScreenshotMappingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ScreenshotMappingController extends Controller {
 
     public function __construct(
-        private ScreenshotDimensionsService $screenshotDimensionsService
+        private ScreenshotMappingService $screenshotMappingService
     ) { }
 
     public function findTextCoordinates(Request $request)
@@ -19,9 +19,14 @@ class ScreenshotMappingController extends Controller {
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $text = $request->get('text');
 
-        $textCoordinates = $this->screenshotDimensionsService->findTextCoordinates(
+        $textCoordinates = $this->screenshotMappingService->findTextCoordinates(
             $screenshotPath,
             $text
+        );
+
+        $slots = $this->screenshotMappingService->getAvailableSlots(
+            $screenshotPath,
+            $anchorCoordinates
         );
 
         // Only available slot is the anchor
@@ -48,6 +53,7 @@ class ScreenshotMappingController extends Controller {
             'anchorCoordinates' => $anchorCoordinates,
             'textCoordinates' => $textCoordinates,
             'slotKeys' => $slotKeys,
+            'slots' => $slots
         ]);
     }
 
@@ -57,7 +63,13 @@ class ScreenshotMappingController extends Controller {
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $textCoordinates = json_decode($request->get('textCoordinates', null), true);
 
-        $strings = $this->screenshotDimensionsService->findTextFromCoordinates(
+        $strings = $this->screenshotMappingService->findTextFromCoordinates(
+            $screenshotPath,
+            $anchorCoordinates,
+            $textCoordinates
+        );
+
+        $slots = $this->screenshotMappingService->getAvailableSlots(
             $screenshotPath,
             $anchorCoordinates,
             $textCoordinates
@@ -66,7 +78,8 @@ class ScreenshotMappingController extends Controller {
         return response()->json([
             'success' => true,
             'screenshotPath' => $screenshotPath,
-            'strings' => $strings
+            'strings' => $strings,
+            'slots' => $slots
         ]);
     }
 
@@ -75,7 +88,24 @@ class ScreenshotMappingController extends Controller {
         $screenshotPath = $request->get('screenshotPath');
         $anchorCoordinates = $request->get('anchorCoordinates');
         $textCoordinates = $request->get('textCoordinates');
-        $slotKey = ScreenshotSlotKey::getKey($request->get('slotKey'));
+        $slotKey = ScreenshotSlotKey::fromKey($request->get('slotKey'));
+
+        $response = $this->screenshotMappingService->updateOrCreateSlot(
+            $screenshotPath,
+            $anchorCoordinates,
+            $textCoordinates,
+            $slotKey
+        );
+
+        $slots = $this->screenshotMappingService->getAvailableSlots(
+            $screenshotPath,
+            $anchorCoordinates,
+            $textCoordinates
+        );
+
+        $response['slots'] = $slots;
+
+        return response()->json($response);
 
         $config = [];
         $path = 'config/screenshot-1.json';
