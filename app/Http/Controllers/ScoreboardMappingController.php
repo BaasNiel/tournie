@@ -71,20 +71,20 @@ class ScoreboardMappingController extends Controller {
     {
         $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = $request->get('anchorCoordinates');
-        $textCoordinates = $request->get('textCoordinates');
+        $slotCoordinates = $request->get('slotCoordinates');
         $slotKey = ScoreboardSlotKey::fromKey($request->get('slotKey'));
 
         $response = $this->scoreboardMappingService->updateOrCreateSlot(
             $scoreboardPath,
             $anchorCoordinates,
-            $textCoordinates,
+            $slotCoordinates,
             $slotKey
         );
 
         $slots = $this->scoreboardMappingService->getAvailableSlots(
             $scoreboardPath,
             $anchorCoordinates,
-            $textCoordinates
+            $slotCoordinates
         );
 
         $response['slots'] = $slots;
@@ -97,85 +97,34 @@ class ScoreboardMappingController extends Controller {
             $config = json_decode(Storage::disk('local')->get($path), true);
         }
 
-        $textCoordinates['slotKey'] = $slotKey;
+        $slotCoordinates['slotKey'] = $slotKey;
 
         if (ScoreboardSlotKey::ANCHOR === $slotKey) {
-            $anchorCoordinates = $textCoordinates;
+            $anchorCoordinates = $slotCoordinates;
             $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
         } else if (!empty($anchorCoordinates)) {
             // Calculate relatives
-            $textCoordinates['x'] -= $anchorCoordinates['x'];
-            $textCoordinates['y'] -= $anchorCoordinates['y'];
+            $slotCoordinates['x'] -= $anchorCoordinates['x'];
+            $slotCoordinates['y'] -= $anchorCoordinates['y'];
         }
 
-        $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey] = $textCoordinates;
+        $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey] = $slotCoordinates;
 
         Storage::disk('local')->put($path, json_encode($config));
 
-        return response()->json([
-            'success' => true,
-            'scoreboardPath' => $scoreboardPath,
+        return response()->success([
             'anchorCoordinates' => $anchorCoordinates,
-            'textCoordinates' => $textCoordinates,
+            'slotCoordinates' => $slotCoordinates,
             'slotKey' => $slotKey
         ]);
-    }
 
-    public function saveAnchor(Request $request)
-    {
-        $scoreboardPath = $request->get('scoreboardPath');
-        $textCoordinates = $request->get('textCoordinates');
-
-        $config = [];
-        $path = 'config/scoreboard.json';
-        if (Storage::disk('local')->exists($path)) {
-            $config = json_decode(Storage::disk('local')->get($path), true);
-        }
-
-        $anchorKey = $textCoordinates['text'] ?? 'not-found';
-        $config['anchors'][$anchorKey] = $textCoordinates;
-
-        Storage::disk('local')->put($path, json_encode($config));
-
-        return response()->json([
-            'success' => true,
-            'textCoordinates' => $textCoordinates,
-            'config' => $config
-        ]);
-    }
-
-    public function saveField(Request $request)
-    {
-        $scoreboardPath = $request->get('scoreboardPath');
-        $anchorCoordinates = $request->get('anchorCoordinates');
-        $textCoordinates = $request->get('textCoordinates');
-        $fieldType = $request->get('fieldType');
-
-        $config = [];
-        $path = 'config/scoreboard.json';
-        if (Storage::disk('local')->exists($path)) {
-            $config = json_decode(Storage::disk('local')->get($path), true);
-        }
-
-        $anchorKey = $anchorCoordinates['text'] ?? 'not-found';
-
-        if (!isset($config['anchors'][$anchorKey]['coordinates'])) {
-            $config['anchors'][$anchorKey]['coordinates'] = [];
-        }
-
-        $textCoordinates['x'] -= $anchorCoordinates['x'];
-        $textCoordinates['y'] -= $anchorCoordinates['y'];
-        $textCoordinates['fieldType'] = $fieldType;
-
-        $config['anchors'][$anchorKey]['coordinates'][] = $textCoordinates;
-
-        Storage::disk('local')->put($path, json_encode($config));
-
-        return response()->json([
-            'success' => true,
-            'textCoordinates' => $textCoordinates,
-            'config' => $config,
-        ]);
+        // return response()->json([
+        //     'success' => true,
+        //     'scoreboardPath' => $scoreboardPath,
+        //     'anchorCoordinates' => $anchorCoordinates,
+        //     'slotCoordinates' => $slotCoordinates,
+        //     'slotKey' => $slotKey
+        // ]);
     }
 
 }

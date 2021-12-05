@@ -44,8 +44,6 @@ Route::prefix('scoreboard')->group(function () {
     Route::prefix('mapping')->group(function () {
         Route::get('/text', [ScoreboardMappingController::class, 'findTextFromCoordinates']);
         Route::get('/text/coordinates', [ScoreboardMappingController::class, 'findTextCoordinates']);
-        Route::post('/anchor', [ScoreboardMappingController::class, 'saveAnchor']);
-        Route::post('/field', [ScoreboardMappingController::class, 'saveField']);
         Route::post('/slot', [ScoreboardMappingController::class, 'saveSlot']);
     });
 });

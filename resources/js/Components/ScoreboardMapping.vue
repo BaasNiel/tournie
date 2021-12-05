@@ -63,6 +63,7 @@
             </button>
 
             <button
+                @click="saveSlot('ANCHOR')"
                 :disabled="anchorSaveDisabled"
                 class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -644,13 +645,14 @@ export default {
             });
         },
 
-        saveSlot(textCoordinates) {
+        saveSlot(slotKey) {
             let me = this;
 
             const data = {
                 scoreboardPath: me.response?.data?.scoreboardPath,
-                textCoordinates: textCoordinates,
-                slotKey: me.mapping.slotKey,
+                anchorCoordinates: me.mapping.anchorCoordinates ?? null,
+                slotCoordinates: me.canvasBlock,
+                slotKey: slotKey ?? me.mapping.slotKey,
             };
 
             axios.post('/scoreboard/mapping/slot', data)
