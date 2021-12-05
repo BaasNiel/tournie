@@ -6,8 +6,6 @@ use App\Enums\ScoreboardSlotKey;
 return [
     'slots' => [
         ScoreboardSlotKey::ANCHOR,
-        ScoreboardSlotKey::PLAYER_AND_CLAN,
-        ScoreboardSlotKey::KILLS,
     ],
     'fieldTypes' => [
         HeroField::player => 'playerNames',

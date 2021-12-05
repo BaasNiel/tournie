@@ -1,46 +1,6 @@
 <template>
-
-    <div class="container mx-auto w-full hidden">
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <BreezeLabel for="text" value="Anchor Text" />
-                <BreezeInput
-                    id="text"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.text"
-                    required
-                />
-                <BreezeLabel for="slotKey" value="Slot" />
-                <Multiselect
-                    id="slotKey"
-                    v-model="mapping.slotKey"
-                    :options="mapping.availableSlots"
-                />
-                <BreezeButton @click="findTextCoordinates" class="mt-5">
-                    Find Text
-                </BreezeButton>
-                <BreezeButton
-                    class="mt-5 ml-5"
-                    @click="saveSlot(canvasBlock)"
-                >
-                    Save Slot
-                </BreezeButton>
-
-                <BreezeButton
-                    class="mt-5 ml-5"
-                    @click="findTextFromCoordinates(canvasBlock)"
-                >
-                    Find Text from Coordinates
-                </BreezeButton>
-            </div>
-            <div>
-                <pre v-if="canvasBlock"><code>{{ canvasBlock }}</code></pre>
-            </div>
-        </div>
-    </div>
-    <div class="container mx-auto overflow-y-scroll">
-
+    <div class="container">
+        <!-- Anchor -->
         <div class="shadow rounded-md p-5 w-48 m-5">
             <label class="font-medium text-gray-700">
                 Anchor Text
@@ -55,8 +15,8 @@
             <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
 
             <button
-                @click="findAnchorText"
-                :disabled="anchorFindDisabled"
+                @click="findCoordinatesFromText('anchor')"
+                :disabled="!mapping.anchor.text.length"
                 class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Find
@@ -71,11 +31,49 @@
             </button>
         </div>
 
+        <!-- Slots -->
+        <div class="shadow rounded-md p-5 w-96 m-5">
+            <label class="font-medium text-gray-700">
+                Slot Text
+            </label>
+            <input
+                type="text"
+                v-model="mapping.slot.text"
+                placeholder="Radiant"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
+            >
+
+            <Multiselect
+                id="slotKey"
+                v-model="mapping.slot.key"
+                :options="mapping.slot.keys"
+            />
+
+            <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
+
+            <button
+                @click="findText"
+                :disabled="anchorFindDisabled"
+                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Find
+            </button>
+
+            <button
+                @click="saveSlot(mapping.slot.key)"
+                :disabled="anchorSaveDisabled"
+                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Save
+            </button>
+        </div>
+    </div>
+    <div class="container mx-auto overflow-y-scroll">
         <canvas
             ref="scoreboardCanvas"
             :style="canvasStyle"
-            :width="width"
-            :height="height"
+            :width="canvasWidth"
+            :height="canvasHeight"
             @mousemove="scoreboardCanvasMouseMove"
             @mousedown="scoreboardCanvasMouseDown"
             @mouseup="scoreboardCanvasMouseUp"
@@ -86,40 +84,38 @@
 
 <script>
 import Multiselect from '@vueform/multiselect';
-import BreezeButton from '@/Components/Button.vue';
-import BreezeInput from '@/Components/Input.vue';
-import BreezeLabel from '@/Components/Label.vue';
 export default {
     components: {
         Multiselect,
-        BreezeButton,
-        BreezeInput,
-        BreezeLabel,
     },
 
     props: ['response'],
 
     data() {
         return {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
+            // Canvas properties
+            canvasWidth: 0,
+            canvasHeight: 0,
 
-            form: {
-                text: 'Radiant'
-            },
+            // Database state
+            scoreboardMapping: {},
 
+            // Client-side mapping
             mapping: {
                 anchor: {
                     text: 'Radiant',
                     error: null,
                 },
 
+                slot: {
+                    text: '',
+                    error: '',
+                    key: null,
+                    keys: []
+                },
+
                 anchorCoordinates: null,
                 fieldsCoordinates: [],
-                fieldType: null,
-                fieldTypes: [],
 
                 slotKey: null,
                 availableSlots: []
@@ -136,8 +132,7 @@ export default {
                     lastEnabledAt: null
                 }
             },
-            canvasImages: [],
-            canvasBlockSnapshot: null,
+
             canvasBlock: {
                 // inputs
                 x: 0,
@@ -151,7 +146,7 @@ export default {
                 bottom: 0,
                 left: 0,
             },
-            canvasSearchResults: null
+            canvasBlockLines: null
         }
     },
 
@@ -194,8 +189,8 @@ export default {
         },
         anchorSaveDisabled() {
             const input = this.mapping.anchor.text;
-            const output = this.canvasSearchResults && this.canvasSearchResults.length === 1
-                ? this.canvasSearchResults[0]
+            const output = this.canvasBlockLines && this.canvasBlockLines.length === 1
+                ? this.canvasBlockLines[0]
                 : false;
 
             return input !== output;
@@ -203,18 +198,13 @@ export default {
     },
 
     watch: {
-        'mapping.anchorCoordinates': {
+        scoreboardMapping: {
             deep: true,
             handler() {
                 this.refreshScoreboard();
             }
         },
-        'mapping.fieldsCoordinates': {
-            deep: true,
-            handler() {
-                this.refreshScoreboard();
-            }
-        },
+
         canvasBlock: {
             deep: true,
             handler() {
@@ -222,8 +212,8 @@ export default {
             }
         },
 
-        canvasSearchResults: function (newValue, oldValue) {
-            this.canvasSearchResultsDraw()
+        canvasBlockLines: function (newValue, oldValue) {
+            this.canvasBlockLinesDraw()
         },
     },
 
@@ -261,15 +251,15 @@ export default {
             }
 
             this.canvasBlockChangedDrawTimeout = setTimeout(() => {
-                me.findTextFromCoordinates(me.canvasBlock);
+                me.findLinesFromCoordinates(me.canvasBlock);
             }, 500)
         },
 
-        canvasSearchResultsDraw() {
+        canvasBlockLinesDraw() {
             const me = this
             const left = me.canvasBlock.left + 10
             const top = me.canvasBlock.bottom + 10
-            const count = me.canvasSearchResults?.length ?? 0
+            const count = me.canvasBlockLines?.length ?? 0
 
             // Add box
             me.canvasContext.beginPath();
@@ -285,10 +275,10 @@ export default {
             me.canvasContext.stroke();
 
             // Add lines
-            if (me.canvasSearchResults?.length) {
+            if (me.canvasBlockLines?.length) {
                 me.canvasContext.beginPath();
                 me.canvasContext.fillStyle = "white";
-                me.canvasSearchResults.forEach((line, index) => {
+                me.canvasBlockLines.forEach((line, index) => {
                     me.canvasContext.fillText(
                         line,
                         left,
@@ -451,7 +441,7 @@ export default {
         },
 
         drawCanvasBlock() {
-            const margin = 10
+            const margin = 0
             let me = this;
             if (!me.canvasBlock) { return; };
 
@@ -488,46 +478,36 @@ export default {
             me.canvasContext.stroke();
         },
 
-        drawFieldsCoordinates() {
+        drawScoreboardMapping() {
             let me = this;
-
-            if (!me.mapping.anchorCoordinates) { return; }
-            if (!me.mapping.fieldsCoordinates) { return; }
+            const slots = me.scoreboardMapping?.slots ?? [];
 
             const colorMap = {
                 ANCHOR: "lightblue",
                 default: "white"
             };
-            me.mapping.fieldsCoordinates.forEach((fieldCoordinates) => {
-                let color = colorMap[fieldCoordinates.slotKey] ?? colorMap['default']
 
-                let x = fieldCoordinates.x;
-                let y = fieldCoordinates.y;
-                if (fieldCoordinates.slotKey !== 'ANCHOR') {
-                    x += me.mapping.anchorCoordinates.x;
-                    y += me.mapping.anchorCoordinates.y;
-                }
+            slots.forEach((slot) => {
+                let color = colorMap[slot.key] ?? colorMap['default']
 
                 me.canvasContext.beginPath();
                 me.canvasContext.setLineDash([2]);
                 me.canvasContext.strokeStyle = color;
                 me.canvasContext.rect(
-                    x,
-                    y,
-                    fieldCoordinates.width,
-                    fieldCoordinates.height,
+                    slot.left,
+                    slot.top,
+                    slot.width,
+                    slot.height,
                 );
 
                 me.canvasContext.fillStyle = color;
                 me.canvasContext.fillText(
-                    "Field Type: '"+fieldCoordinates.slotKey+"'",
-                    x,
-                    y - 5
+                    "Slot: '"+slot.key+"'",
+                    slot.left,
+                    slot.top - 5
                 );
                 me.canvasContext.stroke();
-
             });
-
         },
 
         refreshScoreboard() {
@@ -544,17 +524,18 @@ export default {
             let image = new Image();
             image.src = me.scoreboardUrl;
             image.onload = function() {
-                me.height = image.height;
-                me.width = image.width;
+                me.canvasWidth = image.width;
+                me.canvasHeight = image.height;
                 me.canvasContext.drawImage(image, 0 ,0);
 
                 // Queue the drawings
-                me.drawFieldsCoordinates();
+                me.drawScoreboardMapping();
                 me.drawCanvasBlock();
             };
         },
 
         updateCanvasBlock(coordinates) {
+            // To-do: Check if this trigger's the watcher multiple times
             this.canvasBlock.x = coordinates.x;
             this.canvasBlock.y = coordinates.y;
             this.canvasBlock.left = this.canvasBlock.x;
@@ -564,15 +545,15 @@ export default {
             this.canvasBlock.text = coordinates.text;
         },
 
-        findAnchorText() {
+        findCoordinatesFromText(type) {
             let me = this;
             const params = {
                 scoreboardPath: me.response?.data?.scoreboardPath,
-                text: me.mapping.anchor.text
+                text: me.mapping[type].text
             };
 
-            me.mapping.anchor.error = null;
-            axios.get('/scoreboard/mapping/text/coordinates', {params: params})
+            me.mapping[type].error = null;
+            axios.get('/scoreboard/mapping/coordinates-from-text', {params: params})
                 .then(function (res) {
                     const data = res.data?.data;
 
@@ -581,64 +562,28 @@ export default {
                         y: data.coordinates.tl.y,
                         width: (data.coordinates.tr.x - data.coordinates.tl.x),
                         height: (data.coordinates.bl.y - data.coordinates.tl.y),
-                        text: me.form.text,
+                        text: me.mapping[type].text,
                     });
                 })
                 .catch(function (err) {
                     const data = err.response?.data?.data;
-                    me.mapping.anchor.error = data.error;
+                    me.mapping[type].error = data.error;
                 });
         },
 
-        findTextCoordinates() {
-            let me = this;
-            const data = {
-                scoreboardPath: me.response?.data?.scoreboardPath,
-                anchorCoordinates: me.mapping.anchorCoordinates ?? null,
-                text: me.form.text,
-            };
-
-            me.mapping.fieldType = [];
-            me.mapping.fieldTypes = null;
-            axios.get('/scoreboard/mapping/text/coordinates', {params: data})
-                .then(function (res) {
-                    me.mapping.fieldTypes = res.data.fieldTypes;
-                    const coordinates = {
-                        x: res.data.textCoordinates.tl.x,
-                        y: res.data.textCoordinates.tl.y,
-                        width: (res.data.textCoordinates.tr.x - res.data.textCoordinates.tl.x),
-                        height: (res.data.textCoordinates.bl.y - res.data.textCoordinates.tl.y),
-                        text: me.form.text,
-                    };
-
-                    me.canvasBlock.x = coordinates.x;
-                    me.canvasBlock.y = coordinates.y;
-                    me.canvasBlock.left = me.canvasBlock.x;
-                    me.canvasBlock.top = me.canvasBlock.y;
-                    me.canvasBlock.width = coordinates.width;
-                    me.canvasBlock.height = coordinates.height;
-                    me.canvasBlock.text = coordinates.text;
-                })
-                .catch(function (err) {
-                    me.output = err;
-                });
-        },
-
-        findTextFromCoordinates: function(coordinates) {
+        findLinesFromCoordinates: function(coordinates) {
             let me = this;
 
-            // let me = this;
             const data = {
                 scoreboardPath: me.response?.data?.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 textCoordinates: coordinates ?? me.textCoordinates,
             };
 
-            axios.get('/scoreboard/mapping/text', {
+            axios.get('/scoreboard/mapping/lines-from-coordinates', {
                 params: data
-            }).then(function (res) {
-                me.canvasSearchResults = res.data?.strings?.strings;
-                me.mapping.availableSlots = res.data?.availableSlots;
+            }).then(function (response) {
+                me.canvasBlockLines = response.data?.data?.lines;
             })
             .catch(function (err) {
                 me.output = err;
@@ -657,40 +602,7 @@ export default {
 
             axios.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
-                    me.mapping.fieldsCoordinates.push(response.data.textCoordinates);
-                    me.textCoordinates = null;
-
-                    if (response.data.anchorCoordinates) {
-                        me.mapping.anchorCoordinates = response.data.anchorCoordinates;
-                    }
-
-                    me.mapping.availableSlots = res.data?.availableSlots;
-                })
-                .catch(function (err) {
-                    me.output = err;
-                });
-        },
-
-        saveSlotOld(textCoordinates) {
-            let me = this;
-
-            const data = {
-                scoreboardPath: me.response?.data?.scoreboardPath,
-                anchorCoordinates: me.mapping.anchorCoordinates,
-                textCoordinates: textCoordinates,
-                slotKey: me.mapping.slotKey,
-            };
-
-            axios.post('/scoreboard/mapping/slot', data)
-                .then(function (response) {
-                    me.mapping.fieldsCoordinates.push(response.data.textCoordinates);
-                    me.textCoordinates = null;
-
-                    if (response.data.anchorCoordinates) {
-                        me.mapping.anchorCoordinates = response.data.anchorCoordinates;
-                    }
-
-                    me.mapping.availableSlots = res.data?.availableSlots;
+                    me.scoreboardMapping = response.data?.data.scoreboardMapping;
                 })
                 .catch(function (err) {
                     me.output = err;

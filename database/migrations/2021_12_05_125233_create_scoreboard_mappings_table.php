@@ -17,8 +17,8 @@ class CreateScoreboardMappingsTable extends Migration
             $table->id();
             $table->string('anchor_text')->unique()->index();
             $table->string('scoreboard_path');
+            $table->unsignedInteger('width');
             $table->unsignedInteger('height');
-            $table->unsignedInteger('weight');
             $table->unsignedFloat('size_kb');
             $table->timestamps();
         });

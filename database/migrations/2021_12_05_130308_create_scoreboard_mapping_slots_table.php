@@ -25,7 +25,7 @@ class CreateScoreboardMappingSlotsTable extends Migration
             $table->unsignedInteger('left');
             $table->unsignedInteger('width');
             $table->unsignedInteger('height');
-            $table->string('raw_text')->comment('Original text when captured');
+            $table->string('text')->comment('Original text when captured');
             $table->timestamps();
             $table->foreign('scoreboard_mapping_id')->references('id')->on('scoreboard_mappings');
             $table->unique(['scoreboard_mapping_id', 'key'], 'scoreboard_mapping_id_key_unique');

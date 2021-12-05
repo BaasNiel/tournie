@@ -42,8 +42,8 @@ Route::prefix('scoreboard')->group(function () {
     // To-do: (move to api)
     Route::post('/', [ScoreboardController::class, 'upload']);
     Route::prefix('mapping')->group(function () {
-        Route::get('/text', [ScoreboardMappingController::class, 'findTextFromCoordinates']);
-        Route::get('/text/coordinates', [ScoreboardMappingController::class, 'findTextCoordinates']);
+        Route::get('/lines-from-coordinates', [ScoreboardMappingController::class, 'getLinesFromCoordinates']);
+        Route::get('/coordinates-from-text', [ScoreboardMappingController::class, 'getCoordinatesFromText']);
         Route::post('/slot', [ScoreboardMappingController::class, 'saveSlot']);
     });
 });

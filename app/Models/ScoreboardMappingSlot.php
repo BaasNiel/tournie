@@ -21,7 +21,7 @@ class ScoreboardMappingSlot extends Model
         'left',
         'width',
         'height',
-        'raw_text',
+        'text',
     ];
 
     public function scoreboardMapping(): BelongsTo

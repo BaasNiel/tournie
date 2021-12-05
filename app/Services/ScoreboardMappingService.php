@@ -3,34 +3,25 @@
 namespace App\Services;
 
 use App\Enums\ScoreboardSlotKey;
+use App\Models\ScoreboardMapping;
+use App\Models\ScoreboardMappingSlot;
 use Illuminate\Support\Facades\Storage;
 
 class ScoreboardMappingService
 {
-    public function findTextFromCoordinates(
+    public function findLinesFromCoordinates(
         string $scoreboardPath,
         array $anchorCoordinates = null,
         array $textCoordinates = null
     ): array {
-        $strings = [];
+        $lines = [];
 
-        // Append text coords with anchor (if set)
         $coordinates = [
             'x' => $textCoordinates['x'] ?? 0,
             'y' => $textCoordinates['y'] ?? 0,
             'width' => floatval($textCoordinates['width']),
             'height' => floatval($textCoordinates['height']),
         ];
-
-        // Don't append yet (weird shit going on!)
-        // $coordinates['x'] += !empty($anchorCoordinates['x'])
-        //     ? $anchorCoordinates['x']
-        //     : 0;
-
-        // $coordinates['y'] += !empty($anchorCoordinates['y'])
-        //     ? $anchorCoordinates['y']
-        //     : 0;
-
 
         // Walk through blocks and get all the text
         $data = $this->getJsonData($scoreboardPath);
@@ -68,19 +59,13 @@ class ScoreboardMappingService
                 continue;
             }
 
-            $strings[] = $block['text'];
+            $lines[] = $block['text'];
         }
 
-        return [
-            'anchorCoordinates' => $anchorCoordinates,
-            'textCoordinates' => $textCoordinates,
-            'coordinates' => $coordinates,
-            'boundaries' => $boundaries,
-            'strings' => $strings
-        ];
+        return $lines;
     }
 
-    public function findTextCoordinates(string $scoreboardPath, string $text): ?array
+    public function findCoordinatesFromText(string $scoreboardPath, string $text): ?array
     {
         $data = $this->getJsonData($scoreboardPath);
         foreach ($data['blocks'] as $block)  {
@@ -117,55 +102,34 @@ class ScoreboardMappingService
 
     public function updateOrCreateSlot(
         string $scoreboardPath,
-        ?array $anchorCoordinates,
-        array $textCoordinates,
+        array $anchorCoordinates,
+        array $slotCoordinates,
         ScoreboardSlotKey $slotKey
-    ): array {
-        $config = $this->getConfig($scoreboardPath);
+    ): ScoreboardMappingSlot {
 
-        $textCoordinates['slotKey'] = $slotKey->value;
+        $scoreboardMapping = ScoreboardMapping::updateOrCreate([
+            'anchor_text' => $anchorCoordinates['text']
+        ], [
+            'scoreboard_path' => $scoreboardPath,
+            'height' => 100,
+            'width' => 200,
+            'size_kb' => 300
+        ]);
 
-        if ($slotKey->value === ScoreboardSlotKey::ANCHOR) {
-            $anchorCoordinates = $textCoordinates;
-            $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
-        }
-
-        // Calculate relatives
-        $textCoordinates['x'] -= $anchorCoordinates['x'] ?? 0;
-        $textCoordinates['y'] -= $anchorCoordinates['y'] ?? 0;
-
-        $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey->value] = $textCoordinates;
-
-        $this->saveConfig($scoreboardPath, $config);
-
-        return [
-            'success' => true,
-            'scoreboardPath' => $scoreboardPath,
-            'anchorCoordinates' => $anchorCoordinates,
-            'textCoordinates' => $textCoordinates,
-            'slotKey' => $slotKey
-        ];
-
-        // if (ScoreboardSlotKey::ANCHOR === $slotKey) {
-        //     $anchorCoordinates = $textCoordinates;
-        //     $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
-        // } else if (!empty($anchorCoordinates)) {
-        //     // Calculate relatives
-        //     $textCoordinates['x'] -= $anchorCoordinates['x'];
-        //     $textCoordinates['y'] -= $anchorCoordinates['y'];
-        // }
-
-        // $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey] = $textCoordinates;
-
-        // $this->saveConfig($scoreboardPath, $config);
-
-        // return [
-        //     'success' => true,
-        //     'scoreboardPath' => $scoreboardPath,
-        //     'anchorCoordinates' => $anchorCoordinates,
-        //     'textCoordinates' => $textCoordinates,
-        //     'slotKey' => $slotKey
-        // ];
+        return ScoreboardMappingSlot::updateOrCreate([
+            'scoreboard_mapping_id' => $scoreboardMapping->id,
+            'key' => $slotKey->value
+        ], [
+            'offset_x' => intval($slotCoordinates['left']) - intval($anchorCoordinates['left']),
+            'offset_y' => intval($slotCoordinates['top']) - intval($anchorCoordinates['top']),
+            'top' => $slotCoordinates['top'],
+            'right' => $slotCoordinates['right'],
+            'bottom' => $slotCoordinates['bottom'],
+            'left' => $slotCoordinates['left'],
+            'width' => $slotCoordinates['width'],
+            'height' => $slotCoordinates['height'],
+            'text' => $slotCoordinates['text'],
+        ]);
     }
 
     private function getConfig(string $scoreboardPath): ?array

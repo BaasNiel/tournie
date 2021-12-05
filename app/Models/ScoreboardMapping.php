@@ -13,13 +13,13 @@ class ScoreboardMapping extends Model
     protected $fillable = [
         'anchor_text',
         'scoreboard_path',
+        'width',
         'height',
-        'weight',
         'size_kb',
     ];
 
     public function slots(): HasMany
     {
-        return $this->hasMany(ScoreboardMappingSlot::class, 'scoreboard_mapping_slots');
+        return $this->hasMany(ScoreboardMappingSlot::class);
     }
 }

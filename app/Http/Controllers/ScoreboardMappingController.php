@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ScoreboardSlotKey;
+use App\Models\ScoreboardMapping;
+use App\Models\ScoreboardMappingSlot;
 use App\Services\ScoreboardMappingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,12 +15,12 @@ class ScoreboardMappingController extends Controller {
         private ScoreboardMappingService $scoreboardMappingService
     ) { }
 
-    public function findTextCoordinates(Request $request)
+    public function getCoordinatesFromText(Request $request)
     {
         $scoreboardPath = $request->get('scoreboardPath');
         $text = $request->get('text');
 
-        $coordinates = $this->scoreboardMappingService->findTextCoordinates(
+        $coordinates = $this->scoreboardMappingService->findCoordinatesFromText(
             $scoreboardPath,
             $text
         );
@@ -29,41 +31,25 @@ class ScoreboardMappingController extends Controller {
             ]);
         }
 
-        $anchorCoordinates = null;
-        $slots = $this->scoreboardMappingService->getAvailableSlots(
-            $scoreboardPath,
-            $anchorCoordinates
-        );
-
         return response()->success([
-            'coordinates' => $coordinates,
-            'slots' => $slots
+            'coordinates' => $coordinates
         ]);
     }
 
-    public function findTextFromCoordinates(Request $request)
+    public function getLinesFromCoordinates(Request $request)
     {
         $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $textCoordinates = json_decode($request->get('textCoordinates', null), true);
 
-        $strings = $this->scoreboardMappingService->findTextFromCoordinates(
+        $lines = $this->scoreboardMappingService->findLinesFromCoordinates(
             $scoreboardPath,
             $anchorCoordinates,
             $textCoordinates
         );
 
-        $slots = $this->scoreboardMappingService->getAvailableSlots(
-            $scoreboardPath,
-            $anchorCoordinates,
-            $textCoordinates
-        );
-
-        return response()->json([
-            'success' => true,
-            'scoreboardPath' => $scoreboardPath,
-            'strings' => $strings,
-            'slots' => $slots
+        return response()->success([
+            'lines' => $lines
         ]);
     }
 
@@ -74,57 +60,24 @@ class ScoreboardMappingController extends Controller {
         $slotCoordinates = $request->get('slotCoordinates');
         $slotKey = ScoreboardSlotKey::fromKey($request->get('slotKey'));
 
-        $response = $this->scoreboardMappingService->updateOrCreateSlot(
+        // Clone anchor (if slotKey is anchor)
+        if ($slotKey->value === ScoreboardSlotKey::ANCHOR) {
+            $anchorCoordinates = $slotCoordinates;
+        }
+
+        $scoreboardMappingSlot = $this->scoreboardMappingService->updateOrCreateSlot(
             $scoreboardPath,
             $anchorCoordinates,
             $slotCoordinates,
             $slotKey
         );
 
-        $slots = $this->scoreboardMappingService->getAvailableSlots(
-            $scoreboardPath,
-            $anchorCoordinates,
-            $slotCoordinates
-        );
-
-        $response['slots'] = $slots;
-
-        return response()->json($response);
-
-        $config = [];
-        $path = 'config/scoreboard-1.json';
-        if (Storage::disk('local')->exists($path)) {
-            $config = json_decode(Storage::disk('local')->get($path), true);
-        }
-
-        $slotCoordinates['slotKey'] = $slotKey;
-
-        if (ScoreboardSlotKey::ANCHOR === $slotKey) {
-            $anchorCoordinates = $slotCoordinates;
-            $config['anchors'][$anchorCoordinates['text']] = $anchorCoordinates;
-        } else if (!empty($anchorCoordinates)) {
-            // Calculate relatives
-            $slotCoordinates['x'] -= $anchorCoordinates['x'];
-            $slotCoordinates['y'] -= $anchorCoordinates['y'];
-        }
-
-        $config['anchors'][$anchorCoordinates['text']]['slots'][$slotKey] = $slotCoordinates;
-
-        Storage::disk('local')->put($path, json_encode($config));
+        $scoreboardMapping = ScoreboardMapping::with('slots')->findOrFail($scoreboardMappingSlot->scoreboard_mapping_id);
 
         return response()->success([
-            'anchorCoordinates' => $anchorCoordinates,
-            'slotCoordinates' => $slotCoordinates,
-            'slotKey' => $slotKey
+            'scoreboardMapping' => $scoreboardMapping,
+            'scoreboardMappingSlot' => $scoreboardMappingSlot
         ]);
-
-        // return response()->json([
-        //     'success' => true,
-        //     'scoreboardPath' => $scoreboardPath,
-        //     'anchorCoordinates' => $anchorCoordinates,
-        //     'slotCoordinates' => $slotCoordinates,
-        //     'slotKey' => $slotKey
-        // ]);
     }
 
 }
