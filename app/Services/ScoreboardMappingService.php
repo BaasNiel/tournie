@@ -12,16 +12,9 @@ class ScoreboardMappingService
     public function findLinesFromCoordinates(
         string $scoreboardPath,
         array $anchorCoordinates = null,
-        array $textCoordinates = null
+        array $coordinates = null
     ): array {
         $lines = [];
-
-        $coordinates = [
-            'x' => $textCoordinates['x'] ?? 0,
-            'y' => $textCoordinates['y'] ?? 0,
-            'width' => floatval($textCoordinates['width']),
-            'height' => floatval($textCoordinates['height']),
-        ];
 
         // Walk through blocks and get all the text
         $data = $this->getJsonData($scoreboardPath);
@@ -75,6 +68,26 @@ class ScoreboardMappingService
         }
 
         return null;
+    }
+
+    public function getAvailableSlotKeys(
+        string $scoreboardPath,
+        ?array $anchorCoordinates
+    ): array
+    {
+        $availableSlotKeys = collect(ScoreboardSlotKey::getAll());
+
+        // filter with set keys
+        if (!is_null($anchorCoordinates)) {
+            $scoreboardMapping = ScoreboardMapping::with('slots')->firstWhere('anchor_text', $anchorCoordinates['text']);
+            $keys = $scoreboardMapping->slots->pluck('key');
+
+            $availableSlotKeys = $availableSlotKeys->filter(function ($availableSlotKey) use ($keys) {
+                return !$keys->contains($availableSlotKey['key']);
+            });
+        }
+
+        return $availableSlotKeys->values()->toArray();
     }
 
     public function getAvailableSlots(

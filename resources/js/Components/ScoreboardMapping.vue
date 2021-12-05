@@ -32,7 +32,7 @@
         </div>
 
         <!-- Slots -->
-        <div class="shadow rounded-md p-5 w-96 m-5">
+        <div v-if="mapping.slot.keys" class="shadow rounded-md p-5 w-96 m-5">
             <label class="font-medium text-gray-700">
                 Slot Text
             </label>
@@ -47,13 +47,15 @@
                 id="slotKey"
                 v-model="mapping.slot.key"
                 :options="mapping.slot.keys"
+                label="title"
+                valueProp="key"
             />
 
             <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
 
             <button
-                @click="findText"
-                :disabled="anchorFindDisabled"
+                @click="findCoordinatesFromText('slot')"
+                :disabled="!mapping.slot.text.length"
                 class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Find
@@ -61,7 +63,7 @@
 
             <button
                 @click="saveSlot(mapping.slot.key)"
-                :disabled="anchorSaveDisabled"
+                :disabled="slotSaveDisabled"
                 class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Save
@@ -188,12 +190,26 @@ export default {
             return input === null || input.length === 0;
         },
         anchorSaveDisabled() {
-            const input = this.mapping.anchor.text;
-            const output = this.canvasBlockLines && this.canvasBlockLines.length === 1
-                ? this.canvasBlockLines[0]
-                : false;
+            if (
+                this.canvasBlockLines &&
+                this.canvasBlockLines.length === 1 &&
+                this.mapping.anchor.text === this.canvasBlockLines[0]
+            ) {
+                return false;
+            }
 
-            return input !== output;
+            return true;
+        },
+        slotSaveDisabled() {
+            if (
+                // this.canvasBlockLines &&
+                // this.canvasBlockLines.length > 0 &&
+                this.mapping.slot.key
+            ) {
+                return false;
+            }
+
+            return true;
         }
     },
 
@@ -577,13 +593,15 @@ export default {
             const data = {
                 scoreboardPath: me.response?.data?.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
-                textCoordinates: coordinates ?? me.textCoordinates,
+                coordinates: coordinates
             };
 
             axios.get('/scoreboard/mapping/lines-from-coordinates', {
                 params: data
             }).then(function (response) {
-                me.canvasBlockLines = response.data?.data?.lines;
+                const data = response.data.data;
+                me.canvasBlockLines = data.lines;
+                me.mapping.slot.keys = data.keys;
             })
             .catch(function (err) {
                 me.output = err;
@@ -602,6 +620,7 @@ export default {
 
             axios.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
+                    me.mapping.anchorCoordinates = response.data?.data.anchorCoordinates;
                     me.scoreboardMapping = response.data?.data.scoreboardMapping;
                 })
                 .catch(function (err) {

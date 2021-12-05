@@ -40,16 +40,22 @@ class ScoreboardMappingController extends Controller {
     {
         $scoreboardPath = $request->get('scoreboardPath');
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
-        $textCoordinates = json_decode($request->get('textCoordinates', null), true);
+        $coordinates = json_decode($request->get('coordinates', null), true);
 
         $lines = $this->scoreboardMappingService->findLinesFromCoordinates(
             $scoreboardPath,
             $anchorCoordinates,
-            $textCoordinates
+            $coordinates
+        );
+
+        $keys = $this->scoreboardMappingService->getAvailableSlotKeys(
+            $scoreboardPath,
+            $anchorCoordinates
         );
 
         return response()->success([
-            'lines' => $lines
+            'lines' => $lines,
+            'keys' => $keys
         ]);
     }
 
@@ -74,7 +80,11 @@ class ScoreboardMappingController extends Controller {
 
         $scoreboardMapping = ScoreboardMapping::with('slots')->findOrFail($scoreboardMappingSlot->scoreboard_mapping_id);
 
+
         return response()->success([
+            'anchorCoordinates' => $slotKey->value === ScoreboardSlotKey::ANCHOR
+                ? $scoreboardMappingSlot
+                : $anchorCoordinates,
             'scoreboardMapping' => $scoreboardMapping,
             'scoreboardMappingSlot' => $scoreboardMappingSlot
         ]);

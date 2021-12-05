@@ -17,8 +17,8 @@ class CreateScoreboardMappingSlotsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('scoreboard_mapping_id');
             $table->string('key');
-            $table->unsignedInteger('offset_x')->comment('Distance from the anchor on X-axis');
-            $table->unsignedInteger('offset_y')->comment('Distance from the anchor on Y-axis');
+            $table->integer('offset_x')->comment('Distance from the anchor on X-axis');
+            $table->integer('offset_y')->comment('Distance from the anchor on Y-axis');
             $table->unsignedInteger('top');
             $table->unsignedInteger('right');
             $table->unsignedInteger('bottom');
