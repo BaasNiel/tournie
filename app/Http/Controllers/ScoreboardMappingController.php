@@ -16,43 +16,27 @@ class ScoreboardMappingController extends Controller {
     public function findTextCoordinates(Request $request)
     {
         $scoreboardPath = $request->get('scoreboardPath');
-        $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $text = $request->get('text');
 
-        $textCoordinates = $this->scoreboardMappingService->findTextCoordinates(
+        $coordinates = $this->scoreboardMappingService->findTextCoordinates(
             $scoreboardPath,
             $text
         );
 
+        if (is_null($coordinates)) {
+            return response()->fail([
+                'error' => 'Could not find text "'.$text.'"'
+            ]);
+        }
+
+        $anchorCoordinates = null;
         $slots = $this->scoreboardMappingService->getAvailableSlots(
             $scoreboardPath,
             $anchorCoordinates
         );
 
-        // Only available slot is the anchor
-        $slotKeys = [
-            ScoreboardSlotKey::ANCHOR
-        ];
-
-        // Filter slots by config
-        if ($anchorCoordinates) {
-            $config = [];
-            $path = 'config/scoreboard-1.json';
-            if (Storage::disk('local')->exists($path)) {
-                $config = json_decode(Storage::disk('local')->get($path), true);
-            }
-
-            $configSlots = array_keys($config['anchors'][$anchorCoordinates['text']]['slots']) ?? [];
-            $slotKeys = collect(config('scoreboard.slots'))->filter(function ($slotKey) use ($configSlots) {
-                return !in_array($slotKey, $configSlots);
-            })->values();
-        }
-
-        return response()->json([
-            'success' => true,
-            'anchorCoordinates' => $anchorCoordinates,
-            'textCoordinates' => $textCoordinates,
-            'slotKeys' => $slotKeys,
+        return response()->success([
+            'coordinates' => $coordinates,
             'slots' => $slots
         ]);
     }

@@ -88,6 +88,8 @@ class ScoreboardMappingService
                 return $block['dimensions'];
             }
         }
+
+        return null;
     }
 
     public function getAvailableSlots(

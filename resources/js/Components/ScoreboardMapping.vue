@@ -1,6 +1,6 @@
 <template>
 
-    <div class="container mx-auto w-full">
+    <div class="container mx-auto w-full hidden">
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <BreezeLabel for="text" value="Anchor Text" />
@@ -40,6 +40,36 @@
         </div>
     </div>
     <div class="container mx-auto overflow-y-scroll">
+
+        <div class="shadow rounded-md p-5 w-48 m-5">
+            <label class="font-medium text-gray-700">
+                Anchor Text
+            </label>
+            <input
+                type="text"
+                v-model="mapping.anchor.text"
+                placeholder="Radiant"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
+            >
+
+            <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
+
+            <button
+                @click="findAnchorText"
+                :disabled="anchorFindDisabled"
+                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Find
+            </button>
+
+            <button
+                :disabled="anchorSaveDisabled"
+                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Save
+            </button>
+        </div>
+
         <canvas
             ref="scoreboardCanvas"
             :style="canvasStyle"
@@ -65,6 +95,7 @@ export default {
         BreezeInput,
         BreezeLabel,
     },
+
     props: ['response'],
 
     data() {
@@ -73,11 +104,17 @@ export default {
             y: 0,
             width: 0,
             height: 0,
+
             form: {
                 text: 'Radiant'
             },
 
             mapping: {
+                anchor: {
+                    text: 'Radiant',
+                    error: null,
+                },
+
                 anchorCoordinates: null,
                 fieldsCoordinates: [],
                 fieldType: null,
@@ -149,6 +186,19 @@ export default {
                 cursor: cursorMap[this.mouse.cursor] ?? this.mouse.cursor
             }
         },
+        anchorFindDisabled() {
+            const input = this.mapping.anchor.text;
+
+            return input === null || input.length === 0;
+        },
+        anchorSaveDisabled() {
+            const input = this.mapping.anchor.text;
+            const output = this.canvasSearchResults && this.canvasSearchResults.length === 1
+                ? this.canvasSearchResults[0]
+                : false;
+
+            return input !== output;
+        }
     },
 
     watch: {
@@ -503,6 +553,42 @@ export default {
             };
         },
 
+        updateCanvasBlock(coordinates) {
+            this.canvasBlock.x = coordinates.x;
+            this.canvasBlock.y = coordinates.y;
+            this.canvasBlock.left = this.canvasBlock.x;
+            this.canvasBlock.top = this.canvasBlock.y;
+            this.canvasBlock.width = coordinates.width;
+            this.canvasBlock.height = coordinates.height;
+            this.canvasBlock.text = coordinates.text;
+        },
+
+        findAnchorText() {
+            let me = this;
+            const params = {
+                scoreboardPath: me.response?.data?.scoreboardPath,
+                text: me.mapping.anchor.text
+            };
+
+            me.mapping.anchor.error = null;
+            axios.get('/scoreboard/mapping/text/coordinates', {params: params})
+                .then(function (res) {
+                    const data = res.data?.data;
+
+                    me.updateCanvasBlock({
+                        x: data.coordinates.tl.x,
+                        y: data.coordinates.tl.y,
+                        width: (data.coordinates.tr.x - data.coordinates.tl.x),
+                        height: (data.coordinates.bl.y - data.coordinates.tl.y),
+                        text: me.form.text,
+                    });
+                })
+                .catch(function (err) {
+                    const data = err.response?.data?.data;
+                    me.mapping.anchor.error = data.error;
+                });
+        },
+
         findTextCoordinates() {
             let me = this;
             const data = {
@@ -559,6 +645,31 @@ export default {
         },
 
         saveSlot(textCoordinates) {
+            let me = this;
+
+            const data = {
+                scoreboardPath: me.response?.data?.scoreboardPath,
+                textCoordinates: textCoordinates,
+                slotKey: me.mapping.slotKey,
+            };
+
+            axios.post('/scoreboard/mapping/slot', data)
+                .then(function (response) {
+                    me.mapping.fieldsCoordinates.push(response.data.textCoordinates);
+                    me.textCoordinates = null;
+
+                    if (response.data.anchorCoordinates) {
+                        me.mapping.anchorCoordinates = response.data.anchorCoordinates;
+                    }
+
+                    me.mapping.availableSlots = res.data?.availableSlots;
+                })
+                .catch(function (err) {
+                    me.output = err;
+                });
+        },
+
+        saveSlotOld(textCoordinates) {
             let me = this;
 
             const data = {
