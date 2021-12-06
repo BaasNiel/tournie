@@ -71,6 +71,9 @@
         </div>
     </div>
     <div class="container mx-auto overflow-y-scroll">
+        <p>refreshScoreboardCounter: {{refreshScoreboardCounter}}</p>
+        <p>canvasBlockWatchCounter: {{canvasBlockWatchCounter}}</p>
+
         <canvas
             ref="scoreboardCanvas"
             :style="canvasStyle"
@@ -130,8 +133,7 @@ export default {
                 drag: {
                     x: null,
                     y: null,
-                    enabled: false,
-                    lastEnabledAt: null
+                    enabled: false
                 }
             },
 
@@ -148,7 +150,11 @@ export default {
                 bottom: 0,
                 left: 0,
             },
-            canvasBlockLines: null
+            canvasBlockLines: [],
+
+            // Temp (debug)
+            refreshScoreboardCounter: 0,
+            canvasBlockWatchCounter: 0,
         }
     },
 
@@ -224,6 +230,7 @@ export default {
         canvasBlock: {
             deep: true,
             handler() {
+                this.canvasBlockWatchCounter++;
                 this.canvasBlockChanged();
             }
         },
@@ -275,7 +282,11 @@ export default {
             const me = this
             const left = me.canvasBlock.left + 10
             const top = me.canvasBlock.bottom + 10
-            const count = me.canvasBlockLines?.length ?? 0
+            const count = me.canvasBlockLines.length
+
+            if (count === 0) {
+                return;
+            }
 
             // Add box
             me.canvasContext.beginPath();
@@ -291,7 +302,7 @@ export default {
             me.canvasContext.stroke();
 
             // Add lines
-            if (me.canvasBlockLines?.length) {
+            if (me.canvasBlockLines.length) {
                 me.canvasContext.beginPath();
                 me.canvasContext.fillStyle = "white";
                 me.canvasBlockLines.forEach((line, index) => {
@@ -320,7 +331,6 @@ export default {
 
         scoreboardCanvasMouseUp(e) {
             this.mouse.drag.enabled = false;
-            this.mouse.drag.lastEnabledAt = Date.now();
         },
 
         canvasBlockMove() {
@@ -497,7 +507,6 @@ export default {
         drawScoreboardMapping() {
             let me = this;
             const slots = me.scoreboardMapping?.slots ?? [];
-
             const colorMap = {
                 ANCHOR: "lightblue",
                 default: "white"
@@ -505,6 +514,17 @@ export default {
 
             slots.forEach((slot) => {
                 let color = colorMap[slot.key] ?? colorMap['default']
+                let coordinates = {
+                    top: slot.top,
+                    left: slot.left,
+                    width: slot.width,
+                    height: slot.height,
+                }
+
+                if (slot.key !== 'ANCHOR') {
+                    coordinates.top = this.mapping.anchorCoordinates.top + coordinates.offset_y;
+                    coordinates.left = this.mapping.anchorCoordinates.left + coordinates.offset_x;
+                }
 
                 me.canvasContext.beginPath();
                 me.canvasContext.setLineDash([2]);
@@ -528,6 +548,8 @@ export default {
 
         refreshScoreboard() {
             let me = this;
+
+            me.refreshScoreboardCounter++;
 
             me.canvasBlock.x = me.canvasBlock.left;
             me.canvasBlock.y = me.canvasBlock.top;

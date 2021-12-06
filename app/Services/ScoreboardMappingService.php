@@ -90,29 +90,6 @@ class ScoreboardMappingService
         return $availableSlotKeys->values()->toArray();
     }
 
-    public function getAvailableSlots(
-        string $scoreboardPath,
-        ?array $anchorCoordinates,
-    ): ?array
-    {
-        $path = 'config/scoreboard-2.json';
-        $anchorText = 'Radiant';
-        $config = $this->getConfig($scoreboardPath);
-        $configSlots = collect($config['anchors'][$anchorText]['slots'] ?? []);
-
-        $anchor = $configSlots->firstWhere('slotKey', ScoreboardSlotKey::ANCHOR);
-        if (!$anchor) {
-            return [
-                ScoreboardSlotKey::ANCHOR
-            ];
-        }
-
-        // Filter slots by config
-        return collect(config('scoreboard.slots'))->filter(function ($slotKey) use ($configSlots) {
-            return !$configSlots->pluck('slotKey')->contains($slotKey);
-        })->values()->toArray();
-    }
-
     public function updateOrCreateSlot(
         string $scoreboardPath,
         array $anchorCoordinates,
@@ -143,28 +120,6 @@ class ScoreboardMappingService
             'height' => $slotCoordinates['height'],
             'text' => $slotCoordinates['text'],
         ]);
-    }
-
-    private function getConfig(string $scoreboardPath): ?array
-    {
-        $path = 'config/scoreboard-2.json';
-        if (Storage::disk('local')->exists($path)) {
-            return json_decode(Storage::disk('local')->get($path), true);
-        }
-    }
-
-    private function saveConfig(string $scoreboardPath, array $config): bool
-    {
-        $path = 'config/scoreboard-2.json';
-        return Storage::disk('local')->put($path, json_encode($config, JSON_PRETTY_PRINT));
-    }
-
-    private function getAnchorCoordinates() {
-        return null;
-    }
-
-    private function hasAnchorCoordinates() {
-        return $this->getAnchorCoordinates() ? true : false;
     }
 
     private function getJsonData(string $scoreboardPath): array {

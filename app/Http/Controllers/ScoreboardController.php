@@ -39,7 +39,6 @@ class ScoreboardController extends Controller
         }
 
         // $stats = $this->scoreboardImageService->convertToStats($scoreboardPath);
-        // $data = $this->scoreboardMappingService->findShit($scoreboardPath);
 
         $message = 'Do the mapping';
         throw new ClientDecisionException($message, [
