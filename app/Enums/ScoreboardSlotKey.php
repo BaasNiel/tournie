@@ -46,7 +46,7 @@ final class ScoreboardSlotKey extends Enum
             [
                 'key' => self::DIRE_SCORE,
                 'title' => 'Dire score',
-            ]
+            ],
         ];
     }
 }

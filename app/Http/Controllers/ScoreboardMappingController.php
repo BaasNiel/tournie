@@ -80,7 +80,13 @@ class ScoreboardMappingController extends Controller {
 
         $scoreboardMapping = ScoreboardMapping::with('slots')->findOrFail($scoreboardMappingSlot->scoreboard_mapping_id);
 
+        $keys = $this->scoreboardMappingService->getAvailableSlotKeys(
+            $scoreboardPath,
+            $anchorCoordinates
+        );
+
         return response()->success([
+            'keys' => $keys,
             'anchorCoordinates' => $slotKey->value === ScoreboardSlotKey::ANCHOR
                 ? $scoreboardMappingSlot
                 : $anchorCoordinates,

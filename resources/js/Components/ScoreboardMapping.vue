@@ -1,79 +1,100 @@
 <template>
-    <div class="container">
-        <!-- Anchor -->
-        <div class="shadow rounded-md p-5 w-48 m-5">
-            <label class="font-medium text-gray-700">
-                Anchor Text
-            </label>
-            <input
-                type="text"
-                v-model="mapping.anchor.text"
-                placeholder="Radiant"
-                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
-            >
-
-            <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
-
+    <div v-if="!mapping.anchorCoordinates" class="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
+        <div class="px-4 py-5 sm:px-6">
+            Anchor
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <div>
+                <label for="anchor-text" class="block text-sm font-medium text-gray-700">Find text</label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input
+                        type="text"
+                        v-model="mapping.anchor.text"
+                        name="anchor-text"
+                        id="anchor-text"
+                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
+                        placeholder="Search for text..."
+                    />
+                    <button
+                        @click="findCoordinatesFromText('anchor')"
+                        :disabled="!mapping.anchor.text.length"
+                        type="button"
+                        class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <SearchIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </button>
+                </div>
+                <div v-if="mapping.anchor.error" class="text-red-500 mt-1">{{ mapping.anchor.error }}</div>
+            </div>
+        </div>
+        <div class="px-4 py-4 sm:px-6 flex justify-end">
             <button
-                @click="findCoordinatesFromText('anchor')"
-                :disabled="!mapping.anchor.text.length"
-                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Find
-            </button>
-
-            <button
+                type="button"
                 @click="saveSlot('ANCHOR')"
                 :disabled="anchorSaveDisabled"
-                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Save
-            </button>
-        </div>
-
-        <!-- Slots -->
-        <div v-if="mapping.slot.keys" class="shadow rounded-md p-5 w-96 m-5">
-            <label class="font-medium text-gray-700">
-                Slot Text
-            </label>
-            <input
-                type="text"
-                v-model="mapping.slot.text"
-                placeholder="Radiant"
-                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
-            >
-
-            <Multiselect
-                id="slotKey"
-                v-model="mapping.slot.key"
-                :options="mapping.slot.keys"
-                label="title"
-                valueProp="key"
-            />
-
-            <span v-if="mapping.anchor.error" class="text-red-500">{{ mapping.anchor.error }}</span>
-
-            <button
-                @click="findCoordinatesFromText('slot')"
-                :disabled="!mapping.slot.text.length"
-                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Find
-            </button>
-
-            <button
-                @click="saveSlot(mapping.slot.key)"
-                :disabled="slotSaveDisabled"
-                class="p-2 mt-2 w-full border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Save
             </button>
         </div>
     </div>
-    <div class="container mx-auto overflow-y-scroll">
-        <p>refreshScoreboardCounter: {{refreshScoreboardCounter}}</p>
-        <p>canvasBlockWatchCounter: {{canvasBlockWatchCounter}}</p>
+    <div v-else-if="mapping.slot.keys.length" class="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
+        <div class="px-4 py-5 sm:px-6">
+            Slots
+            <span v-if="scoreboardMapping.slots">({{scoreboardMapping.slots.length}}/{{slotsTotal}})</span>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <label for="anchor-text" class="block text-sm font-medium text-gray-700">Find text</label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+                <input
+                    type="text"
+                    v-model="mapping.slot.text"
+                    name="slot-text"
+                    id="slot-text"
+                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
+                    placeholder="Search for text..."
+                />
+                <button
+                    @click="findCoordinatesFromText('slot')"
+                    :disabled="!mapping.slot.text.length"
+                    type="button"
+                    class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <SearchIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </button>
+            </div>
 
+            <div v-if="mapping.slot.keys" class="mt-1">
+                <label for="slot-key" class="block text-sm font-medium text-gray-700">Type</label>
+                <Multiselect
+                    id="slot-key"
+                    name="slot-key"
+                    class="rounded-md shadow-sm"
+                    v-model="mapping.slot.key"
+                    :options="mapping.slot.keys"
+                    label="title"
+                    valueProp="key"
+                />
+            </div>
+            <div v-if="mapping.anchor.error" class="text-red-500 mt-1">{{ mapping.anchor.error }}</div>
+        </div>
+        <div class="px-4 py-4 sm:px-6 flex justify-end">
+            <button
+                type="button"
+                @click="saveSlot(mapping.slot.key)"
+                :disabled="slotSaveDisabled"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Save
+            </button>
+        </div>
+    </div>
+    <div v-else class="bg-green-500 overflow-hidden shadow rounded-lg divide-y divide-gray-200">
+        <div class="px-4 py-5 sm:px-6">
+            Mapping complete!
+        </div>
+    </div>
+    <div class="w-full overflow-y-scroll">
         <canvas
             ref="scoreboardCanvas"
             :style="canvasStyle"
@@ -89,9 +110,12 @@
 
 <script>
 import Multiselect from '@vueform/multiselect';
+import { SearchIcon, UsersIcon } from '@heroicons/vue/solid'
 export default {
     components: {
         Multiselect,
+        SearchIcon,
+        UsersIcon,
     },
 
     props: ['response'],
@@ -166,6 +190,11 @@ export default {
     },
 
     computed: {
+        slotsTotal() {
+            const mapped = this.scoreboardMapping?.slots?.length || 0;
+            const unmapped = this.mapping?.slot?.keys?.length || 0;
+            return mapped + unmapped;
+        },
         scoreboardUrl() {
             return this.response?.data?.urls?.image;
         },
@@ -207,15 +236,7 @@ export default {
             return true;
         },
         slotSaveDisabled() {
-            if (
-                // this.canvasBlockLines &&
-                // this.canvasBlockLines.length > 0 &&
-                this.mapping.slot.key
-            ) {
-                return false;
-            }
-
-            return true;
+            return !this.mapping.slot.key
         }
     },
 
@@ -522,25 +543,25 @@ export default {
                 }
 
                 if (slot.key !== 'ANCHOR') {
-                    coordinates.top = this.mapping.anchorCoordinates.top + coordinates.offset_y;
-                    coordinates.left = this.mapping.anchorCoordinates.left + coordinates.offset_x;
+                    coordinates.top = me.mapping.anchorCoordinates.top + slot.offset_y;
+                    coordinates.left = me.mapping.anchorCoordinates.left + slot.offset_x;
                 }
 
                 me.canvasContext.beginPath();
                 me.canvasContext.setLineDash([2]);
                 me.canvasContext.strokeStyle = color;
                 me.canvasContext.rect(
-                    slot.left,
-                    slot.top,
-                    slot.width,
-                    slot.height,
+                    coordinates.left,
+                    coordinates.top,
+                    coordinates.width,
+                    coordinates.height,
                 );
 
                 me.canvasContext.fillStyle = color;
                 me.canvasContext.fillText(
-                    "Slot: '"+slot.key+"'",
-                    slot.left,
-                    slot.top - 5
+                    slot.key,
+                    coordinates.left,
+                    coordinates.top - 5
                 );
                 me.canvasContext.stroke();
             });
@@ -642,8 +663,10 @@ export default {
 
             axios.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
-                    me.mapping.anchorCoordinates = response.data?.data.anchorCoordinates;
-                    me.scoreboardMapping = response.data?.data.scoreboardMapping;
+                    const data = response.data.data;
+                    me.mapping.anchorCoordinates = data.anchorCoordinates;
+                    me.scoreboardMapping = data.scoreboardMapping;
+                    me.mapping.slot.keys = data.keys;
                 })
                 .catch(function (err) {
                     me.output = err;
