@@ -64,7 +64,21 @@
                 </button>
             </div>
 
-            <div v-if="mapping.slot.keys" class="mt-1">
+            <div class="mt-2">
+                <label for="slot-key" class="block text-sm font-medium text-gray-700">Type</label>
+                <select
+                    id="location"
+                    name="location"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    v-model="mapping.slot.key"
+                >
+                    <option v-for="record in mapping.slot.keys" :key="record.key" :value="record.key">
+                        {{ record.group }} / {{ record.title }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- <div v-if="mapping.slot.keys" class="mt-1">
                 <label for="slot-key" class="block text-sm font-medium text-gray-700">Type</label>
                 <Multiselect
                     id="slot-key"
@@ -75,8 +89,8 @@
                     label="title"
                     valueProp="key"
                 />
-            </div>
-            <div v-if="mapping.anchor.error" class="text-red-500 mt-1">{{ mapping.anchor.error }}</div>
+            </div> -->
+            <div v-if="mapping.slot.error" class="text-red-500 mt-1">{{ mapping.slot.error }}</div>
         </div>
         <div class="px-4 py-4 sm:px-6 flex justify-end">
             <button
@@ -639,6 +653,7 @@ export default {
                 coordinates: coordinates
             };
 
+            me.mapping.slot.key = null;
             axios.get('/scoreboard/mapping/lines-from-coordinates', {
                 params: data
             }).then(function (response) {
@@ -661,6 +676,7 @@ export default {
                 slotKey: slotKey ?? me.mapping.slotKey,
             };
 
+            me.mapping.slot.key = null;
             axios.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
                     const data = response.data.data;

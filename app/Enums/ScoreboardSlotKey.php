@@ -219,6 +219,13 @@ final class ScoreboardSlotKey extends Enum
     const DIRE_PLAYER_5_DENIES = 'DIRE_PLAYER_5_DENIES';
     const DIRE_PLAYER_5_GPM = 'DIRE_PLAYER_5_GPM';
 
+    public static function getSlot(string $scoreboardSlotKey)
+    {
+        return collect(self::getAll())->first(function ($slotKey) use ($scoreboardSlotKey) {
+            return $slotKey['key'] === $scoreboardSlotKey;
+        });
+    }
+
     public static function getAll(): array
     {
         return [
@@ -232,624 +239,624 @@ final class ScoreboardSlotKey extends Enum
             // Radiant
             [
                 'key' => self::RADIANT_WINNER,
-                'title' => 'Radiant winner label',
+                'title' => 'Winner label',
                 'group' => 'Radiant'
             ],
             [
                 'key' => self::RADIANT_SCORE,
-                'title' => 'Radiant score',
+                'title' => 'Score',
                 'group' => 'Radiant'
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_ALIAS_AND_CLAN,
                 'title' => 'Player 1 / Alias and Clan',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_HERO_LEVEL,
                 'title' => 'Player 1 / Hero level',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_HERO_NAME,
                 'title' => 'Player 1 / Hero name',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_KILLS,
                 'title' => 'Player 1 / Kills',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_DEATHS,
                 'title' => 'Player 1 / Deaths',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_ASSISTS,
                 'title' => 'Player 1 / Assists',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_NET_WORTH,
                 'title' => 'Player 1 / Net worth',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_LAST_HITS,
                 'title' => 'Player 1 / Last hits',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_DENIES,
                 'title' => 'Player 1 / Denies',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_1_GPM,
                 'title' => 'Player 1 / Gold per minute',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 1
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_ALIAS_AND_CLAN,
                 'title' => 'Player 2 / Alias and Clan',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_HERO_LEVEL,
                 'title' => 'Player 2 / Hero level',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_HERO_NAME,
                 'title' => 'Player 2 / Hero name',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_KILLS,
                 'title' => 'Player 2 / Kills',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_DEATHS,
                 'title' => 'Player 2 / Deaths',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_ASSISTS,
                 'title' => 'Player 2 / Assists',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_NET_WORTH,
                 'title' => 'Player 2 / Net worth',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_LAST_HITS,
                 'title' => 'Player 2 / Last hits',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_DENIES,
                 'title' => 'Player 2 / Denies',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_2_GPM,
                 'title' => 'Player 2 / Gold per minute',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 2
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_ALIAS_AND_CLAN,
                 'title' => 'Player 3 / Alias and Clan',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_HERO_LEVEL,
                 'title' => 'Player 3 / Hero level',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_HERO_NAME,
                 'title' => 'Player 3 / Hero name',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_KILLS,
                 'title' => 'Player 3 / Kills',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_DEATHS,
                 'title' => 'Player 3 / Deaths',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_ASSISTS,
                 'title' => 'Player 3 / Assists',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_NET_WORTH,
                 'title' => 'Player 3 / Net worth',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_LAST_HITS,
                 'title' => 'Player 3 / Last hits',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_DENIES,
                 'title' => 'Player 3 / Denies',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_3_GPM,
                 'title' => 'Player 3 / Gold per minute',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 3
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_ALIAS_AND_CLAN,
                 'title' => 'Player 4 / Alias and Clan',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_HERO_LEVEL,
                 'title' => 'Player 4 / Hero level',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_HERO_NAME,
                 'title' => 'Player 4 / Hero name',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_KILLS,
                 'title' => 'Player 4 / Kills',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_DEATHS,
                 'title' => 'Player 4 / Deaths',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_ASSISTS,
                 'title' => 'Player 4 / Assists',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_NET_WORTH,
                 'title' => 'Player 4 / Net worth',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_LAST_HITS,
                 'title' => 'Player 4 / Last hits',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_DENIES,
                 'title' => 'Player 4 / Denies',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_4_GPM,
                 'title' => 'Player 4 / Gold per minute',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 4
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_ALIAS_AND_CLAN,
                 'title' => 'Player 5 / Alias and Clan',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_HERO_LEVEL,
                 'title' => 'Player 5 / Hero level',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_HERO_NAME,
                 'title' => 'Player 5 / Hero name',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_KILLS,
                 'title' => 'Player 5 / Kills',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_DEATHS,
                 'title' => 'Player 5 / Deaths',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_ASSISTS,
                 'title' => 'Player 5 / Assists',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_NET_WORTH,
                 'title' => 'Player 5 / Net worth',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_LAST_HITS,
                 'title' => 'Player 5 / Last hits',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_DENIES,
                 'title' => 'Player 5 / Denies',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
             [
                 'key' => self::RADIANT_PLAYER_5_GPM,
                 'title' => 'Player 5 / Gold per minute',
-                'side' => 'Radiant',
+                'group' => 'Radiant',
                 'player' => 5
             ],
 
             // Dire
             [
                 'key' => self::DIRE_WINNER,
-                'title' => 'Dire winner label',
+                'title' => 'Winner label',
                 'group' => 'Dire'
             ],
             [
                 'key' => self::DIRE_SCORE,
-                'title' => 'Dire score',
+                'title' => 'Score',
                 'group' => 'Dire'
             ],
             [
                 'key' => self::DIRE_PLAYER_1_ALIAS_AND_CLAN,
                 'title' => 'Player 1 / Alias and Clan',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_HERO_LEVEL,
                 'title' => 'Player 1 / Hero level',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_HERO_NAME,
                 'title' => 'Player 1 / Hero name',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_KILLS,
                 'title' => 'Player 1 / Kills',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_DEATHS,
                 'title' => 'Player 1 / Deaths',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_ASSISTS,
                 'title' => 'Player 1 / Assists',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_NET_WORTH,
                 'title' => 'Player 1 / Net worth',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_LAST_HITS,
                 'title' => 'Player 1 / Last hits',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_DENIES,
                 'title' => 'Player 1 / Denies',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_1_GPM,
                 'title' => 'Player 1 / Gold per minute',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 1
             ],
             [
                 'key' => self::DIRE_PLAYER_2_ALIAS_AND_CLAN,
                 'title' => 'Player 2 / Alias and Clan',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_HERO_LEVEL,
                 'title' => 'Player 2 / Hero level',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_HERO_NAME,
                 'title' => 'Player 2 / Hero name',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_KILLS,
                 'title' => 'Player 2 / Kills',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_DEATHS,
                 'title' => 'Player 2 / Deaths',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_ASSISTS,
                 'title' => 'Player 2 / Assists',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_NET_WORTH,
                 'title' => 'Player 2 / Net worth',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_LAST_HITS,
                 'title' => 'Player 2 / Last hits',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_DENIES,
                 'title' => 'Player 2 / Denies',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_2_GPM,
                 'title' => 'Player 2 / Gold per minute',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 2
             ],
             [
                 'key' => self::DIRE_PLAYER_3_ALIAS_AND_CLAN,
                 'title' => 'Player 3 / Alias and Clan',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_HERO_LEVEL,
                 'title' => 'Player 3 / Hero level',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_HERO_NAME,
                 'title' => 'Player 3 / Hero name',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_KILLS,
                 'title' => 'Player 3 / Kills',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_DEATHS,
                 'title' => 'Player 3 / Deaths',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_ASSISTS,
                 'title' => 'Player 3 / Assists',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_NET_WORTH,
                 'title' => 'Player 3 / Net worth',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_LAST_HITS,
                 'title' => 'Player 3 / Last hits',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_DENIES,
                 'title' => 'Player 3 / Denies',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_3_GPM,
                 'title' => 'Player 3 / Gold per minute',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 3
             ],
             [
                 'key' => self::DIRE_PLAYER_4_ALIAS_AND_CLAN,
                 'title' => 'Player 4 / Alias and Clan',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_HERO_LEVEL,
                 'title' => 'Player 4 / Hero level',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_HERO_NAME,
                 'title' => 'Player 4 / Hero name',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_KILLS,
                 'title' => 'Player 4 / Kills',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_DEATHS,
                 'title' => 'Player 4 / Deaths',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_ASSISTS,
                 'title' => 'Player 4 / Assists',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_NET_WORTH,
                 'title' => 'Player 4 / Net worth',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_LAST_HITS,
                 'title' => 'Player 4 / Last hits',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_DENIES,
                 'title' => 'Player 4 / Denies',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_4_GPM,
                 'title' => 'Player 4 / Gold per minute',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 4
             ],
             [
                 'key' => self::DIRE_PLAYER_5_ALIAS_AND_CLAN,
                 'title' => 'Player 5 / Alias and Clan',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_HERO_LEVEL,
                 'title' => 'Player 5 / Hero level',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_HERO_NAME,
                 'title' => 'Player 5 / Hero name',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_KILLS,
                 'title' => 'Player 5 / Kills',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_DEATHS,
                 'title' => 'Player 5 / Deaths',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_ASSISTS,
                 'title' => 'Player 5 / Assists',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_NET_WORTH,
                 'title' => 'Player 5 / Net worth',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_LAST_HITS,
                 'title' => 'Player 5 / Last hits',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_DENIES,
                 'title' => 'Player 5 / Denies',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
             [
                 'key' => self::DIRE_PLAYER_5_GPM,
                 'title' => 'Player 5 / Gold per minute',
-                'side' => 'Dire',
+                'group' => 'Dire',
                 'player' => 5
             ],
         ];

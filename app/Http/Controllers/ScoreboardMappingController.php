@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\ScoreboardSlotKey;
 use App\Models\ScoreboardMapping;
-use App\Models\ScoreboardMappingSlot;
 use App\Services\ScoreboardMappingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ScoreboardMappingController extends Controller {
 

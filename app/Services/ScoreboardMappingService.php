@@ -9,6 +9,71 @@ use Illuminate\Support\Facades\Storage;
 
 class ScoreboardMappingService
 {
+    public function findScoreboardMapping(string $scoreboardPath, array $data): array
+    {
+        $blocks = collect($data['blocks']);
+
+        // Map the slots and text
+        $anchorCoordinates = [];
+        $anchor = ScoreboardMapping::with('slots')->get()->first(function ($scoreboardMapping) use ($blocks, &$anchorCoordinates) {
+
+            // Get the anchor
+            $anchor = $scoreboardMapping->slots->firstWhere('key', ScoreboardSlotKey::ANCHOR);
+            $anchorCoordinates = [
+                'x' => $anchor->left,
+                'y' => $anchor->top,
+                'width' => $anchor->width,
+                'height' => $anchor->height
+            ];
+
+            // Find anchor in scoreboard's blocks
+            return $blocks->containsStrict('text', $anchor->text);
+        });
+
+        // Walk through all the slots and map the block text
+        // $keys = $anchor->slots->mapWithKeys(function ($slot) use ($scoreboardPath, $anchorCoordinates) {
+        //     $lines = $this->findLinesFromCoordinates(
+        //         $scoreboardPath,
+        //         $anchorCoordinates, [
+        //             'x' => $slot->left,
+        //             'y' => $slot->top,
+        //             'width' => $slot->width,
+        //             'height' => $slot->height
+        //         ]
+        //     );
+        //     return [
+        //         $slot->key => $lines
+        //     ];
+        // });
+
+        // Walk through all the slots and map the block text
+        $slots = $anchor->slots->map(function ($slot) use ($scoreboardPath, $anchorCoordinates) {
+            $lines = $this->findLinesFromCoordinates(
+                $scoreboardPath,
+                $anchorCoordinates, [
+                    'x' => $slot->left,
+                    'y' => $slot->top,
+                    'width' => $slot->width,
+                    'height' => $slot->height
+                ]
+            );
+
+            $scoreboardSlotKey = ScoreboardSlotKey::getSlot(ScoreboardSlotKey::getValue($slot->key));
+
+            $scoreboardSlotKey['lines'] = $lines;
+
+            return $scoreboardSlotKey;
+        })
+        ->sortBy('key', SORT_NATURAL)
+        ->values();
+
+        return [
+            'anchor' => $anchor,
+            'slots' => $slots,
+            'anchorCoordinates' => $anchorCoordinates
+        ];
+    }
+
     public function findLinesFromCoordinates(
         string $scoreboardPath,
         array $anchorCoordinates = null,

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Google\Cloud\Vision\V1\AnnotateImageResponse;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class ScoreboardGoogleService

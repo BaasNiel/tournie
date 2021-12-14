@@ -25,9 +25,8 @@ class ScoreboardController extends Controller
 
         $scoreboard = $request->file('file') ?? null;
         if (!$scoreboard) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No scoreboard image found'
+            return response()->fail([
+                'message' => 'Expected parameter "file" not found'
             ]);
         }
 
@@ -37,6 +36,8 @@ class ScoreboardController extends Controller
         if (!Storage::disk('public')->exists($scoreboardPath)) {
             Storage::disk('public')->put($scoreboardPath, $scoreboardContent);
         }
+
+        return response()->success($this->handleScoreboard($scoreboardPath));
 
         // $stats = $this->scoreboardImageService->convertToStats($scoreboardPath);
 
@@ -60,5 +61,19 @@ class ScoreboardController extends Controller
                 'image' => Storage::url($scoreboardPath),
             ]
         ]);
+    }
+
+    public function handleScoreboard(string $scoreboardPath): array
+    {
+        // Get or fetch the scoreboard's stats
+        $data = $this->scoreboardGoogleService->getData($scoreboardPath);
+
+        $mapping = $this->scoreboardMappingService->findScoreboardMapping($scoreboardPath, $data);
+
+        return [
+            'imageUrl' => Storage::url($scoreboardPath),
+            'data' => $data,
+            'mapping' => $mapping
+        ];
     }
 }
