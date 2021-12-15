@@ -166,7 +166,7 @@ class ScoreboardMappingSlotService {
     ): array {
         $lines = [];
 
-        $boundaries = [
+        $bounds = [
             'top' => $coordinates['y'],
             'right' => $coordinates['x'] + $coordinates['width'],
             'bottom' => $coordinates['y'] + $coordinates['height'],
@@ -174,28 +174,15 @@ class ScoreboardMappingSlotService {
         ];
 
         foreach ($blocks as $block) {
-            $blockCoordinates = [
-                'top' => $block['dimensions']['tl']['y'],
-                'left' => $block['dimensions']['tl']['x']
-            ];
+            $left = $block['dimensions']['tl']['x'];
+            $top = $block['dimensions']['tl']['y'];
 
-            // Too far left
-            if ($blockCoordinates['left'] < $boundaries['left']) {
-                continue;
-            }
+            $outOfBounds = $left < $bounds['left']  ||
+                           $left > $bounds['right'] ||
+                           $top  < $bounds['top']   ||
+                           $top  > $bounds['bottom'];
 
-            // Too far right
-            if ($blockCoordinates['left'] > $boundaries['right']) {
-                continue;
-            }
-
-            // Too far top
-            if ($blockCoordinates['top'] < $boundaries['top']) {
-                continue;
-            }
-
-            // Too far bottom
-            if ($blockCoordinates['top'] > $boundaries['bottom']) {
+            if ($outOfBounds) {
                 continue;
             }
 
