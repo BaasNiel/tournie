@@ -5,122 +5,60 @@ namespace App\Services;
 use App\Enums\ScoreboardSlotKey;
 use App\Models\ScoreboardMapping;
 use App\Models\ScoreboardMappingSlot;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class ScoreboardMappingService
 {
+    public function __construct(
+        protected ScoreboardMappingSlotService $slotService,
+        protected array|null $anchorCoordinates = null,
+        protected array|null $mappedSlots = null
+    ){ }
+
     public function findScoreboardMapping(string $scoreboardPath, array $data): array
     {
-        $blocks = collect($data['blocks']);
+        $scoreboardBlocks = collect($data['blocks']);
 
-        // Map the slots and text
-        $anchorCoordinates = [];
-        $anchor = ScoreboardMapping::with('slots')->get()->first(function ($scoreboardMapping) use ($blocks, &$anchorCoordinates) {
-
-            // Get the anchor
-            $anchor = $scoreboardMapping->slots->firstWhere('key', ScoreboardSlotKey::ANCHOR);
-            $anchorCoordinates = [
-                'x' => $anchor->left,
-                'y' => $anchor->top,
-                'width' => $anchor->width,
-                'height' => $anchor->height
-            ];
-
-            // Find anchor in scoreboard's blocks
-            return $blocks->containsStrict('text', $anchor->text);
-        });
-
-        // Walk through all the slots and map the block text
-        // $keys = $anchor->slots->mapWithKeys(function ($slot) use ($scoreboardPath, $anchorCoordinates) {
-        //     $lines = $this->findLinesFromCoordinates(
-        //         $scoreboardPath,
-        //         $anchorCoordinates, [
-        //             'x' => $slot->left,
-        //             'y' => $slot->top,
-        //             'width' => $slot->width,
-        //             'height' => $slot->height
-        //         ]
-        //     );
-        //     return [
-        //         $slot->key => $lines
-        //     ];
-        // });
-
-        // Walk through all the slots and map the block text
-        $slots = $anchor->slots->map(function ($slot) use ($scoreboardPath, $anchorCoordinates) {
-            $lines = $this->findLinesFromCoordinates(
-                $scoreboardPath,
-                $anchorCoordinates, [
-                    'x' => $slot->left,
-                    'y' => $slot->top,
-                    'width' => $slot->width,
-                    'height' => $slot->height
-                ]
+        $anchor = ScoreboardMapping::with('slots')->get()->first(function ($scoreboardMapping) use ($scoreboardBlocks) {
+            $this->anchorCoordinates = $this->slotService->getAnchor(
+                $scoreboardBlocks,
+                $scoreboardMapping->slots
             );
 
-            $scoreboardSlotKey = ScoreboardSlotKey::getSlot(ScoreboardSlotKey::getValue($slot->key));
+            if (is_null($this->anchorCoordinates)) {
+                return false;
+            }
 
-            $scoreboardSlotKey['lines'] = $lines;
+            $this->mappedSlots = $this->slotService->getMappedSlots(
+                $scoreboardBlocks,
+                $scoreboardMapping->slots,
+                $this->anchorCoordinates
+            );
 
-            return $scoreboardSlotKey;
-        })
-        ->sortBy('key', SORT_NATURAL)
-        ->values();
+            return true;
+        });
 
         return [
-            'anchor' => $anchor,
-            'slots' => $slots,
-            'anchorCoordinates' => $anchorCoordinates
+            'anchorCoordinates' => $this->anchorCoordinates,
+            'slots' => $this->mappedSlots
         ];
     }
 
-    public function findLinesFromCoordinates(
+    public function findLinesByCoordinates(
         string $scoreboardPath,
-        array $anchorCoordinates = null,
-        array $coordinates = null
+        ?array $anchorCoordinates = null,
+        ?array $coordinates = null
     ): array {
-        $lines = [];
 
-        // Walk through blocks and get all the text
-        $data = $this->getJsonData($scoreboardPath);
+        // Get blocks from json file
+        $blocks = collect($this->getJsonData($scoreboardPath)['blocks'] ?? []);
 
-        $boundaries = [
-            'top' => $coordinates['y'],
-            'right' => $coordinates['x'] + $coordinates['width'],
-            'bottom' => $coordinates['y'] + $coordinates['height'],
-            'left' => $coordinates['x'],
-        ];
-
-        foreach ($data['blocks'] as $block) {
-            $blockCoordinates = [
-                'top' => $block['dimensions']['tl']['y'],
-                'left' => $block['dimensions']['tl']['x']
-            ];
-
-            // Too far left
-            if ($blockCoordinates['left'] < $boundaries['left']) {
-                continue;
-            }
-
-            // Too far right
-            if ($blockCoordinates['left'] > $boundaries['right']) {
-                continue;
-            }
-
-            // Too far top
-            if ($blockCoordinates['top'] < $boundaries['top']) {
-                continue;
-            }
-
-            // Too far bottom
-            if ($blockCoordinates['top'] > $boundaries['bottom']) {
-                continue;
-            }
-
-            $lines[] = $block['text'];
-        }
-
-        return $lines;
+        return $this->slotService->findLinesByCoordinatesFromBlocks(
+            $blocks,
+            $anchorCoordinates,
+            $coordinates
+        );
     }
 
     public function findCoordinatesFromText(string $scoreboardPath, string $text): ?array

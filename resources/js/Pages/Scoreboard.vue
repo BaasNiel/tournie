@@ -40,29 +40,35 @@
                                 Group
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Key
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Title
                             </th>
-                            <th scope="col" class="relative px-6 py-3">
+                            <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Lines
+                            </th> -->
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Value
+                            </th>
+                            <th scope="col" class="relative px-6 py-3">
+                                Valid
                             </th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr v-for="(slot, slotIndex) in response.data.mapping.slots" :key="slotIndex" :class="slotIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ slot.group }}
+                                {{ slot.group }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ slot.key }}
+                                {{ slot.title }}
+                            </td>
+                            <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ slot.lines }}
+                            </td> -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ slot.value }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ slot.title }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ slot.lines }}
+                                {{ slot.validation.error }}
                             </td>
                         </tr>
                         </tbody>

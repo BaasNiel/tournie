@@ -40,7 +40,7 @@ class ScoreboardMappingController extends Controller {
         $anchorCoordinates = json_decode($request->get('anchorCoordinates', null), true);
         $coordinates = json_decode($request->get('coordinates', null), true);
 
-        $lines = $this->scoreboardMappingService->findLinesFromCoordinates(
+        $lines = $this->scoreboardMappingService->findLinesByCoordinates(
             $scoreboardPath,
             $anchorCoordinates,
             $coordinates

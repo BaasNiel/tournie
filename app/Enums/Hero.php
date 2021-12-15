@@ -242,14 +242,14 @@ final class Hero extends Enum
     const WraithKing = 'Wraith King';
     const Zeus = 'Zeus';
 
-    public static function startsWith($string): ?string {
-        if (Str::length($string) < 2) {
+    public static function startsWith($line): ?string {
+        if (Str::length($line) < 2) {
             return null;
         }
 
         $names = self::getValues();
         foreach ($names as $name) {
-            if (Str::startsWith(Str::lower($name), Str::lower($string))) {
+            if (Str::startsWith(Str::lower($name), Str::lower($line))) {
                 return $name;
             }
         }
@@ -257,12 +257,12 @@ final class Hero extends Enum
         return null;
     }
 
-    public static function findHeroName(array $strings): ?string {
+    public static function findHeroName(array $lines): ?string {
         $parts = [];
         $name = null;
 
-        foreach ($strings as $string) {
-            $parts[] = $string;
+        foreach ($lines as $line) {
+            $parts[] = $line;
             $startsWith = implode(' ', $parts);
 
             $nameCheck = self::startsWith($startsWith);

@@ -309,7 +309,7 @@ export default {
             }
 
             this.canvasBlockChangedDrawTimeout = setTimeout(() => {
-                me.findLinesFromCoordinates(me.canvasBlock);
+                me.findLinesByCoordinates(me.canvasBlock);
             }, 500)
         },
 
@@ -644,7 +644,7 @@ export default {
                 });
         },
 
-        findLinesFromCoordinates: function(coordinates) {
+        findLinesByCoordinates: function(coordinates) {
             let me = this;
 
             const data = {
