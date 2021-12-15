@@ -23,6 +23,6 @@ class Player extends Model
 
     public function games()
     {
-        return $this->belongsToMany(Game::class)->using(GamePlayer::class);
+        return $this->belongsToMany(Game::class)->using(GamePlayer::class)->withTimestamps();
     }
 }
