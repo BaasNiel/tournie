@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Game;
-use App\Models\GamePlayer;
 use App\Models\Player;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -34,24 +33,33 @@ class GameFactory extends Factory
 
     public function configure()
     {
-        return $this->afterMaking(function (Game $game) {
-            $this->generatePlayersForGame($game);
-        })->afterCreating(function (Game $game) {
-            $this->generatePlayersForGame($game);
+        return $this->afterCreating(function (Game $game) {
+            $this->createPlayersForGame($game);
         });
     }
 
-    private function generatePlayersForGame(Game $game)
+    private function createPlayersForGame(Game $game)
     {
         // grab 10 random players
         $allPlayers = Player::all()->toArray();
         shuffle($allPlayers);
         $players = array_slice($allPlayers, 0, 10);
 
-        foreach ($players as $player) {
-
+        foreach ($players as $index => $player) {
+            $game->players()->syncWithoutDetaching([$player['id'] => [
+                'player_slot' => $index,
+                'hero_id' => $this->faker->numberBetween(1, 100),
+                'hero_level' => $this->faker->numberBetween(12, 30),
+                'denies' => $this->faker->numberBetween(0, 25),
+                'kills' => $this->faker->numberBetween(0, 15),
+                'deaths' => $this->faker->numberBetween(0, 15),
+                'assists' => $this->faker->numberBetween(0, 15),
+                'net_worth' => $this->faker->numberBetween(8000, 50000),
+                'gold_per_minute' => $this->faker->numberBetween(200, 1000),
+                'xp_per_minute' => $this->faker->numberBetween(300, 800),
+                'last_hits' => $this->faker->numberBetween(40, 300),
+                'last_hits' => $this->faker->numberBetween(0, 30)
+            ]]);
         }
-
-        $gamePlayer = new GamePlayer();
     }
 }
