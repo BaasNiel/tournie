@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GameController;
 use App\Http\Controllers\PlayerController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -21,10 +22,6 @@ Route::get('/', function () {
 })->name('log');
 
 Route::resource('players', PlayerController::class);
-
-Route::get('/matches', function () {
-    return Inertia::render('Matches');
-})->name('matches');
-
+Route::resource('games', GameController::class);
 
 require __DIR__.'/auth.php';
