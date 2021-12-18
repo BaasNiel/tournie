@@ -20,4 +20,9 @@ class Player extends Model
     {
         return $this->first_name . ' ' . $this->last_name;
     }
+
+    public function games()
+    {
+        return $this->belongsToMany(Game::class)->using(GamePlayer::class);
+    }
 }

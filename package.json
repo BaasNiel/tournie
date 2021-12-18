@@ -7,7 +7,8 @@
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
         "prod": "npm run production",
-        "production": "mix --production"
+        "production": "mix --production",
+        "hottest": "mix watch --hot -- --port=8089"
     },
     "devDependencies": {
         "@inertiajs/inertia": "^0.10.0",
@@ -27,6 +28,7 @@
     },
     "dependencies": {
         "@headlessui/vue": "^1.4.1",
-        "@heroicons/vue": "^1.0.4"
+        "@heroicons/vue": "^1.0.4",
+        "@vueform/multiselect": "^2.2.0"
     }
 }
