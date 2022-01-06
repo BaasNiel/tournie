@@ -36,10 +36,16 @@
         <scoreboard-table v-if="scoreboard.mapping" :slots="scoreboard.mapping.slots" />
 
 
-        <client-decision-exception
-            v-if="clientDecisionException"
-            :clientDecisionException="clientDecisionException"
-        />
+        <div v-if="clientDecisionException">
+
+            <div v-if="clientDecisionException.type === 'mapping'">
+                <scoreboard-mapping :response="clientDecisionException"/>
+            </div>
+            <client-decision-exception v-else
+                :clientDecisionException="clientDecisionException"
+            />
+        </div>
+
     </Layout>
 </template>
 
@@ -49,6 +55,7 @@ import Layout from '@/Layouts/Layout.vue'
 import { Head } from '@inertiajs/inertia-vue3';
 import ClientDecisionException from '@/Components/ClientDecisionException';
 import ScoreboardTable from '@/Components/ScoreboardTable';
+import ScoreboardMapping from '@/Components/ScoreboardMapping.vue';
 
 export default {
     components: {
@@ -56,6 +63,7 @@ export default {
         Head,
         ClientDecisionException,
         ScoreboardTable,
+        ScoreboardMapping
     },
 
     data() {
@@ -102,7 +110,11 @@ export default {
 
             ApiBase.get('/scoreboard/mapping', {params: data})
                 .then(function (res) {
-                    if (res.data.success) {
+                    console.log({
+                        res: res
+                    })
+
+                    if (res.data.status === 'success') {
                         me.scoreboard.mapping = res.data.data.mapping;
                     } else {
                         me.clientDecisionException = res.data.data;

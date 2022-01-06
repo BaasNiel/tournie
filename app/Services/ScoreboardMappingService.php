@@ -19,6 +19,27 @@ class ScoreboardMappingService
 
     public function findScoreboardMapping(string $scoreboardPath, array $data): array
     {
+
+        /**
+         * Hack the mapping
+         */
+        $message = 'Do the mapping';
+        throw new ClientDecisionException($message, [
+            'action' => [
+                'method' => 'POST',
+                'endpoint' => '/client-exception/option'
+            ],
+            'urls' => [
+                'image' => Storage::url($scoreboardPath),
+            ],
+            'scoreboardPath' => $scoreboardPath,
+            'type' => 'mapping',
+            'label' => 'Do the mapping!',
+        ]);
+        /**
+         * Hack the mapping
+         */
+
         $scoreboardBlocks = collect($data['blocks']);
 
         $anchor = ScoreboardMapping::with('slots')->get()->first(function ($scoreboardMapping) use ($scoreboardBlocks) {

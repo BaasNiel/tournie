@@ -123,6 +123,7 @@
 </template>
 
 <script>
+import ApiBase from '@/Apis/ApiBase';
 import Multiselect from '@vueform/multiselect';
 import { SearchIcon, UsersIcon } from '@heroicons/vue/solid'
 export default {
@@ -197,6 +198,13 @@ export default {
     },
 
     mounted() {
+
+        // console.log({
+        //     fn: 'scoreboardMapping.mounted',
+        //     response: this.response,
+        //     scoreboardPath: this.response.scoreboardPath,
+        // })
+
         this.refreshScoreboard();
 
         // Not sure why? But it works...
@@ -210,7 +218,7 @@ export default {
             return mapped + unmapped;
         },
         scoreboardUrl() {
-            return this.response?.data?.urls?.image;
+            return this.response.urls?.image;
         },
         canvas: function () {
             return this.$refs?.scoreboardCanvas;
@@ -620,13 +628,14 @@ export default {
 
         findCoordinatesFromText(type) {
             let me = this;
+
             const params = {
-                scoreboardPath: me.response?.data?.scoreboardPath,
+                scoreboardPath: me.response.scoreboardPath,
                 text: me.mapping[type].text
             };
 
             me.mapping[type].error = null;
-            axios.get('/scoreboard/mapping/coordinates-from-text', {params: params})
+            ApiBase.get('/scoreboard/mapping/coordinates-from-text', {params: params})
                 .then(function (res) {
                     const data = res.data?.data;
 
@@ -639,7 +648,7 @@ export default {
                     });
                 })
                 .catch(function (err) {
-                    const data = err.response?.data?.data;
+                    const data = err.response.data;
                     me.mapping[type].error = data.error;
                 });
         },
@@ -647,14 +656,19 @@ export default {
         findLinesByCoordinates: function(coordinates) {
             let me = this;
 
+
+            console.log({
+                fn: 'findLinesByCoordinates',
+                response: me.response
+            });
             const data = {
-                scoreboardPath: me.response?.data?.scoreboardPath,
+                scoreboardPath: me.response.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 coordinates: coordinates
             };
 
             me.mapping.slot.key = null;
-            axios.get('/scoreboard/mapping/lines-from-coordinates', {
+            ApiBase.get('/scoreboard/mapping/lines-from-coordinates', {
                 params: data
             }).then(function (response) {
                 const data = response.data.data;
@@ -670,14 +684,14 @@ export default {
             let me = this;
 
             const data = {
-                scoreboardPath: me.response?.data?.scoreboardPath,
+                scoreboardPath: me.response.scoreboardPath,
                 anchorCoordinates: me.mapping.anchorCoordinates ?? null,
                 slotCoordinates: me.canvasBlock,
                 slotKey: slotKey ?? me.mapping.slotKey,
             };
 
             me.mapping.slot.key = null;
-            axios.post('/scoreboard/mapping/slot', data)
+            ApiBase.post('/scoreboard/mapping/slot', data)
                 .then(function (response) {
                     const data = response.data.data;
                     me.mapping.anchorCoordinates = data.anchorCoordinates;

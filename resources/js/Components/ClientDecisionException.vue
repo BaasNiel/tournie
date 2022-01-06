@@ -167,11 +167,10 @@ export default {
             let me = this
             const data = {
                 action: 'createAlias',
-                value: this.selectedOptionsJoined
+                value: this.clientDecisionException.value
             }
 
-
-            axios.post(clientDecisionException.action.endpoint, data)
+            axios.post(this.clientDecisionException.action.endpoint, data)
                 .then(function (res) {
                     console.log({
                         fn: 'createAlias',
@@ -186,7 +185,7 @@ export default {
         createAlias() {
             const data = {
                 action: 'createAlias',
-                value: this.selectedOptionsJoined
+                value: this.clientDecisionException.value
             }
 
             axios.post(this.response.data.action.endpoint, data)

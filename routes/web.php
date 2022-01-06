@@ -29,7 +29,7 @@ Route::get('/matches', function () {
 })->name('matches');
 
 // To-do: (move to api)
-Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
+Route::post('/client-exception/alias', [ClientExceptionController::class, 'post'])
     ->name('clientExceptionPost');
 
 Route::get('/scoreboard', function () {
