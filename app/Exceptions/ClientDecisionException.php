@@ -34,9 +34,9 @@ class ClientDecisionException extends Exception
 
     public function render($request): array
     {
+        $this->data['message'] = $this->getMessage();
         return [
             'success' => false,
-            'message' => $this->getMessage(),
             'data'    => $this->data
         ];
     }

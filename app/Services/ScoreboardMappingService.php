@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ScoreboardSlotKey;
+use App\Exceptions\ClientDecisionException;
 use App\Models\ScoreboardMapping;
 use App\Models\ScoreboardMappingSlot;
 use Illuminate\Support\Collection;
@@ -12,8 +13,8 @@ class ScoreboardMappingService
 {
     public function __construct(
         protected ScoreboardMappingSlotService $slotService,
-        protected array|null $anchorCoordinates = null,
-        protected array|null $mappedSlots = null
+        protected Collection $mappedSlots,
+        protected array $anchorCoordinates = [],
     ){ }
 
     public function findScoreboardMapping(string $scoreboardPath, array $data): array
@@ -26,7 +27,7 @@ class ScoreboardMappingService
                 $scoreboardMapping->slots
             );
 
-            if (is_null($this->anchorCoordinates)) {
+            if (empty($this->anchorCoordinates)) {
                 return false;
             }
 
@@ -38,6 +39,37 @@ class ScoreboardMappingService
 
             return true;
         });
+
+        // Get the mapping accuracy
+        if ($this->mappedSlots->isEmpty()) {
+            $message = 'Mapping not found';
+            throw new ClientDecisionException($message, [
+                'action' => [
+                    'method' => 'POST',
+                    'endpoint' => '/client-exception/option'
+                ],
+                'scoreboardPath' => $scoreboardPath,
+                'type' => 'mapping',
+                'label' => 'Anchor text not found',
+            ]);
+        }
+        // if (is_null($this->mappedSlots))
+
+        // To-do: Catch exception based on something like:
+        // - Less than 95% of fields mapped
+        // $message = 'Do the mapping';
+        // throw new ClientDecisionException($message, [
+        //     'action' => [
+        //         'method' => 'POST',
+        //         'endpoint' => '/client-exception/option'
+        //     ],
+        //     'urls' => [
+        //         'image' => Storage::url($scoreboardPath),
+        //     ],
+        //     'scoreboardPath' => $scoreboardPath,
+        //     'type' => 'mapping',
+        //     'label' => 'Do the mapping!',
+        // ]);
 
         return [
             'anchorCoordinates' => $this->anchorCoordinates,

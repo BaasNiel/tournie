@@ -32,20 +32,26 @@ Route::get('/matches', function () {
 Route::post('/client-exception/option', [ClientExceptionController::class, 'post'])
     ->name('clientExceptionPost');
 
-Route::prefix('scoreboard')->group(function () {
+Route::get('/scoreboard', function () {
+    return Inertia::render('Scoreboard');
+})->name('scoreboard');
 
-    // (temp) Use the landing route for upload testing
-    Route::get('/', function () {
-        return Inertia::render('Scoreboard');
-    })->name('scoreboard');
+// Internal
+Route::middleware('auth:sanctum')->prefix('internal')->group(function () {
 
-    // To-do: (move to api)
-    Route::post('/', [ScoreboardController::class, 'upload']);
-    Route::prefix('mapping')->group(function () {
-        Route::get('/lines-from-coordinates', [ScoreboardMappingController::class, 'getLinesFromCoordinates']);
-        Route::get('/coordinates-from-text', [ScoreboardMappingController::class, 'getCoordinatesFromText']);
-        Route::post('/slot', [ScoreboardMappingController::class, 'saveSlot']);
+    Route::prefix('scoreboard')->group(function () {
+        Route::post('/', [ScoreboardController::class, 'upload']);
+
+        Route::prefix('mapping')->group(function () {
+            Route::get('/', [ScoreboardController::class, 'getMapping']);
+            Route::get('/lines-from-coordinates', [ScoreboardMappingController::class, 'getLinesFromCoordinates']);
+            Route::get('/coordinates-from-text', [ScoreboardMappingController::class, 'getCoordinatesFromText']);
+            Route::post('/slot', [ScoreboardMappingController::class, 'saveSlot']);
+        });
+
     });
+
+
 });
 
 require __DIR__.'/auth.php';

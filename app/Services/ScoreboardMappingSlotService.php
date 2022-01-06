@@ -6,7 +6,6 @@ use App\Collections\ScoreboardMappingSlotCollection;
 use App\Enums\Hero;
 use App\Enums\ScoreboardSlotKey;
 use App\Exceptions\ClientDecisionException;
-use App\Models\ScoreboardMapping;
 use Illuminate\Support\Collection;
 
 class ScoreboardMappingSlotService {
@@ -18,17 +17,17 @@ class ScoreboardMappingSlotService {
     public function getAnchor(
         Collection $blocks,
         ScoreboardMappingSlotCollection $slots
-    ): ?array {
+    ): array {
 
         // Fully mapped slots only
         if ($slots->count() !== count(ScoreboardSlotKey::getAll())) {
-            return null;
+            return [];
         }
 
         // Matching anchor key
         $anchor = $slots->firstWhere('key', ScoreboardSlotKey::ANCHOR);
         if (!$blocks->containsStrict('text', $anchor->text)) {
-            return null;
+            return [];
         }
 
         return [
@@ -43,7 +42,7 @@ class ScoreboardMappingSlotService {
         Collection $blocks,
         ScoreboardMappingSlotCollection $slots,
         array $anchorCoordinates
-    ): array {
+    ): Collection {
 
         return $slots->map(function ($slot) use ($blocks, $anchorCoordinates) {
             $coordinates = [
@@ -67,8 +66,7 @@ class ScoreboardMappingSlotService {
             return $this->validateSlot($slot);
         })
         ->sortBy('key', SORT_NATURAL)
-        ->values()
-        ->toArray();
+        ->values();
 
     }
 
@@ -128,18 +126,16 @@ class ScoreboardMappingSlotService {
                 $playerAlias = $this->playerAliasService->find($lines);
 
                 if (is_null($playerAlias)) {
-                    // $error = 'Expected player name';
-
-                    // To-do: throw exception here
-                    $message = "Player alias not found";
-                    throw new ClientDecisionException($message, [
+                    throw new ClientDecisionException(
+                        'Player alias not found', [
                         'action' => [
                             'method' => 'POST',
-                            'endpoint' => '/client-exception/option'
+                            'endpoint' => '/client-exception/alias'
                         ],
-                        'type' => 'dropdown',
-                        'label' => 'Select the player alias',
-                        'options' => $lines
+                        'type' => 'text',
+                        'label' => 'Enter the alias',
+                        'value' => implode(' ', $lines),
+                        'slot' => $slot
                     ]);
                 } else {
                     $value = $playerAlias->alias;

@@ -8,98 +8,65 @@
             </h2>
         </template>
 
-        <div v-if="!response" class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+        <div v-if="!response"
+            class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
             <div class="space-y-1 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <div class="flex text-sm text-gray-600">
-                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                    <span>Upload a screenshot of the scoreboard</span>
-                    <input v-on:change="onChange" id="file-upload" name="file-upload" type="file" class="sr-only" />
-                </label>
-                <p class="pl-1">or drag and drop</p>
-            </div>
-            <p class="text-xs text-gray-500">
-                PNG, JPG up to 10MB
-            </p>
-            </div>
-        </div>
-
-        <div v-else>
-
-            <div v-if="response.status === 'success'">
-
-                <img :src="response.data.imageUrl" alt="Image not found">
-
-                <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Group
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Title
-                            </th>
-                            <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Lines
-                            </th> -->
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Value
-                            </th>
-                            <th scope="col" class="relative px-6 py-3">
-                                Valid
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="(slot, slotIndex) in response.data.mapping.slots" :key="slotIndex" :class="slotIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ slot.group }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ slot.title }}
-                            </td>
-                            <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ slot.lines }}
-                            </td> -->
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ slot.value }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ slot.validation.error }}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"
+                    aria-hidden="true">
+                    <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                    <label for="file-upload"
+                        class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                        <span>Upload a screenshot of the scoreboard</span>
+                        <input v-on:change="onChange" id="file-upload" name="file-upload" type="file" class="sr-only" />
+                    </label>
+                    <p class="pl-1">or drag and drop</p>
                 </div>
-            </div>
-            <div v-else>
-                <client-decision-exception :response="response" />
+                <p class="text-xs text-gray-500">
+                    PNG, JPG up to 10MB
+                </p>
             </div>
         </div>
 
+        <img v-if="scoreboard.url" :src="scoreboard.url" alt="Image not found">
+
+        <scoreboard-table v-if="scoreboard.mapping" :slots="scoreboard.mapping.slots" />
+
+
+        <client-decision-exception
+            v-if="clientDecisionException"
+            :clientDecisionException="clientDecisionException"
+        />
     </Layout>
 </template>
 
 <script>
+import ApiBase from '@/Apis/ApiBase';
 import Layout from '@/Layouts/Layout.vue'
-import { Head, usePage } from '@inertiajs/inertia-vue3';
-import ClientDecisionException from '@/Components/ClientDecisionException.vue';
-import ScoreboardLine from '@/Components/ScoreboardLine.vue';
+import { Head } from '@inertiajs/inertia-vue3';
+import ClientDecisionException from '@/Components/ClientDecisionException';
+import ScoreboardTable from '@/Components/ScoreboardTable';
 
 export default {
     components: {
         Layout,
         Head,
         ClientDecisionException,
-        ScoreboardLine,
+        ScoreboardTable,
     },
 
     data() {
         return {
-            response: null
+            response: null,
+            scoreboard: {
+                path: null,
+                url: null,
+                mapping: null
+            },
+            clientDecisionException: null
         };
     },
 
@@ -115,13 +82,34 @@ export default {
 
             let data = new FormData();
             data.append('file', e.target.files[0]);
-
-            axios.post('/scoreboard', data, config)
+            ApiBase.post('/scoreboard', data, config)
                 .then(function (res) {
-                    me.response = res.data;
+                    me.scoreboard.path = res.data.data.path;
+                    me.scoreboard.url = res.data.data.url;
+
+                    me.getScoreboardMapping();
                 })
                 .catch(function (err) {
                     me.output = err;
+                });
+        },
+
+        getScoreboardMapping() {
+            let me = this
+            let data = {
+                scoreboardPath: this.scoreboard.path
+            }
+
+            ApiBase.get('/scoreboard/mapping', {params: data})
+                .then(function (res) {
+                    if (res.data.success) {
+                        me.scoreboard.mapping = res.data.data.mapping;
+                    } else {
+                        me.clientDecisionException = res.data.data;
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
                 });
         }
     }
