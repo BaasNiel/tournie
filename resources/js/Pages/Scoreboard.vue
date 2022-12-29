@@ -35,7 +35,6 @@
 
         <scoreboard-table v-if="scoreboard.mapping" :slots="scoreboard.mapping.slots" />
 
-
         <div v-if="clientDecisionException">
 
             <div v-if="clientDecisionException.type === 'mapping'">

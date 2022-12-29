@@ -39,13 +39,28 @@
             </tr>
         </tbody>
     </table>
+
+    <p v-for="(exceptionSlot, exceptionSlotIndex) in exceptionSlots" :key="exceptionSlotIndex">
+        <!-- {{ exceptionSlot }} -->
+        <scoreboard-mapping-exception :mappingSlot="exceptionSlot" />
+    </p>
+
 </template>
 
 
 <script>
+import ScoreboardMappingException from './ScoreboardMappingException.vue';
 export default {
+  components: { ScoreboardMappingException },
     props: {
         slots: Array
+    },
+    computed: {
+        exceptionSlots() {
+            return this.slots.filter((slot) => {
+                return !slot.validation.valid;
+            })
+        },
     }
 }
 </script>

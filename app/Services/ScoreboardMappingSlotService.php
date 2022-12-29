@@ -146,7 +146,9 @@ class ScoreboardMappingSlotService {
 
         $slot['validation'] = [
             'valid' => is_null($error),
-            'error' => $error
+            'error' => is_null($error)
+                ? null
+                : sprintf('%s, but found "%s"', $error, implode(' ', empty($lines) ? ['EMPTY'] : $lines))
         ];
 
         $slot['type'] = $type;
