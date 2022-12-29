@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'demo@demo.com',
         ]);
 
-
         $this->call(PlayerSeeder::class);
+        $this->call(PlayerAliasSeeder::class);
     }
 }
